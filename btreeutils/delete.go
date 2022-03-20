@@ -5,453 +5,237 @@
 // @Update
 package btreeutils
 
-//
-//import (
-//	"fmt"
-//	"go-red-black-tree/global"
-//	"go-red-black-tree/rbtmodels"
-//)
-//
-//// Delete 删除节点
-//// @deleteNode 待删除节点
-//func Delete(deleteNode *rbtmodels.RBTNode) {
-//
-//	// 删除唯一的根
-//	if deleteNode == global.Root && deleteNode.Left == nil && deleteNode.Right == nil {
-//		global.Root = nil
-//		return
-//	}
-//
-//	/*
-//	 * 普通二叉树，删除的时候，用前驱节点or后继节点替换(内容，不替换颜色)，然后删掉替代节点(替代节点可能有单叶子，把这个单叶子提上来)
-//	 * 找前驱，如没有左子树(删除时候用不到这种情形)，就向父亲不断找，直到向左拐弯的地方。
-//	 * 找后继，如没有右子树(删除时候用不到这种情形)，就向父亲不断找，直到向右拐弯的地方。
-//	 * 找后继，如没有右子树(删除时候用不到这种情形)，就向父亲不断找，直到向右拐弯的地方。
-//	 * [1]找前驱or后继[1.1]找不到前驱/后置，我作为待删除。。[1.2]找到的节点替换我的(内容，不替换颜色)，找到的节点作为待删除。
-//	 * [2]自己能搞定，相当于234树的三or四节点，删掉低端红色；或删掉高位黑色，唯一儿子变黑上来
-//	 * [3]自己搞不定，相当于234树的二节点，删掉唯一黑色后，把父亲借下来，234树的兄弟(多节点)顶上去父亲位置
-//	 * [4]自己搞不定，相当于234树的二节点，删掉唯一黑色后，把父亲借下来，234树的兄弟(二节点)也没得借。需要递归。可能需要递归。走插入节点的双红
-//	 */
-//
-//	// [1]找前驱or后继[1.1]找不到前驱/后置，我作为待删除。。[1.2]找到的节点替换我的(内容，不替换颜色)，找到的节点作为待删除。
-//	avatarNode := deleteNode
-//	if !(deleteNode.Left == nil || deleteNode.Right == nil) { // deleteNode有双子才需要找前序节点
-//		avatarNode = Predecessor(deleteNode) // 用前驱节点做替身
-//		//avatarNode = Successor(deleteNode) // 用后继节点做替身
-//	}
-//
-//	if avatarNode == nil {
-//		fmt.Println("[1.1]找不到前驱/后置，我作为待删除:", deleteNode.Key)
-//		avatarNode = deleteNode
-//	} else { // [1.2]找到前驱/后置，找到的节点替换我的(内容，不替换颜色)，找到的节点作为待删除。
-//		_ = deleteNode.ReplaceInfo(avatarNode)
-//	}
-//
-//	// 到这里，待删除节点是是avatarNode
-//	// [2]avatar自己能搞定，相当于234树的三or四节点，删掉低端红色；或删掉高位黑色，唯一儿子变黑上来
-//	// [2.1]avatar是末端，avatar是红.删除==》结束（avatar是末端我是黑是最难的，不在这里讨论）
-//	// [2.2]avatar是次末端，avatar和下级必然不同色，2个下级。avatar复制某个(我决定找左)下级内容,染黑(无论原来啥颜色)，删除avatar左儿子，右儿子变红(无论原来啥颜色)==》结束
-//	// [2.3]avatar是次末端，avatar和下级必然不同色，只有一个下级。avatar复制下级内容，染黑(无论原来啥颜色)==》结束
-//
-//	if avatarNode.Left == nil && avatarNode.Right == nil && avatarNode.IsRed {
-//		// [2.1]avatar是末端，avatar是红.删除==》结束（avatar是末端我是黑是最难的，不在这里讨论）
-//		if avatarNode.Parent.Left == avatarNode {
-//			avatarNode.Parent.Left = nil // 上级摘钩就行，下级就会等待GC
-//			avatarNode.Parent = nil      // 上级摘钩就行，下级就会等待GC
-//		} else {
-//			avatarNode.Parent.Right = nil // 上级摘钩就行，下级就会等待GC
-//			avatarNode.Parent = nil       // 上级摘钩就行，下级就会等待GC
-//		}
-//		return
-//	}
-//
-//	//if avatarNode.Left != nil && avatarNode.Right != nil {
-//	//	// [2.2]avatar是次末端，avatar和下级必然不同色，2个下级。（实战不会两个儿子的，写上吧）
-//	//	// avatar复制某个(我决定找左)下级内容,染黑(无论原来啥颜色)，删除avatar左儿子，右儿子变红(无论原来啥颜色)==》结束
-//	//	_ = avatarNode.ReplaceInfo(avatarNode.Left)
-//	//	avatarNode.Left.Parent = nil
-//	//	avatarNode.Left = nil
-//	//	avatarNode.IsRed = false
-//	//	avatarNode.Right.IsRed = true
-//	//	return
-//	//}
-//
-//	// avatar必然只有0or1个儿子，
-//	// [2.3]avatar是次末端，avatar和下级必然不同色，只有一个下级。avatar复制下级内容，染黑(无论原来啥颜色)==》结束
-//	if avatarNode.Left != nil { // 唯一儿子在左
-//		_ = avatarNode.ReplaceInfo(avatarNode.Left)
-//		avatarNode.Left.Parent = nil
-//		avatarNode.Left = nil
-//		avatarNode.IsRed = false
-//		return
-//	} else if avatarNode.Right != nil { // 唯一儿子在右
-//		_ = avatarNode.ReplaceInfo(avatarNode.Right)
-//		avatarNode.Right.Parent = nil
-//		avatarNode.Right = nil
-//		avatarNode.IsRed = false
-//		return
-//	}
-//	// 别瞎return ，给后面[3][4]单黑无下级节点留着口子
-//
-//	// [3][4]到这里，我是无下级黑节点
-//	var brotherNode *rbtmodels.RBTNode        // 是时候定义兄弟节点了
-//	if avatarNode.Parent.Left == avatarNode { // 我在爸爸左手
-//		brotherNode = avatarNode.Parent.Right
-//	} else { // 我在爸爸右手
-//		brotherNode = avatarNode.Parent.Left
-//	}
-//	// [3]自己搞不定，相当于234树的二节点，删掉唯一黑色后，把父亲借下来，234树的兄弟(多节点)顶上去父亲位置
-//
-//	if brotherNode.Left != nil && brotherNode.Right != nil { // 兄弟有2个侄子
-//		/* [3.1]avatar单黑，兄弟节点有双侄子。父亲为轴向avatar旋转，把父亲借下来，兄弟顶上去父亲位置。
-//		*       父亲节点用原来父亲节点的颜色，兄弟一级黑色，子侄一级红色。==>结束
-//		*         (50X)            (50X)  |         (50X)           (50X)
-//		*         /                /      |         /               /
-//		*       (30X)            (40X)    |       (30X)           (20X)
-//		*       /   \            /   \    |       /   \           /   \
-//		*   A(20B) (40X)      (30B) (45B) |    (20X) A(40B)    (15X) A(30B)
-//		*          /   \         \        |    /   \                  /
-//		*       (35X)  (45X)     (35R)    | (15X)  (25X)           (25X)
-//		*         A是末端，所以兄弟下面不会再有了
-//		 */
-//		brotherNode.IsRed = avatarNode.Parent.IsRed // 先染色再旋转，父亲节点用原来父亲节点的颜色
-//		avatarNode.Parent.IsRed = false             // 先染色再旋转，父亲(下一步占我的位置）黑色
-//		if avatarNode.Parent.Left == avatarNode {   // 我在爸爸左手
-//			brotherNode.Left.IsRed = true
-//			brotherNode.Right.IsRed = false
-//			_ = LeftRotate(avatarNode.Parent) // 左旋转
-//			avatarNode.Parent.Left = nil
-//			avatarNode.Parent = nil
-//		} else { // 我在爸爸右手
-//			brotherNode.Left.IsRed = false
-//			brotherNode.Right.IsRed = true
-//			_ = RightRotate(avatarNode.Parent) // 右旋转
-//			avatarNode.Parent.Right = nil
-//			avatarNode.Parent = nil
-//		}
-//		return
-//	}
-//
-//	if (brotherNode.Left != nil && brotherNode.Right == nil) || (brotherNode.Left == nil && brotherNode.Right != nil) { // 兄弟有1个侄子（没有侄子情形，属于[4]）.玛德，#golang# 居然没有逻辑运算异或。（#golang是世界上最好的语言# ）
-//		/* [3.2]avatar单黑，兄弟节点有单侄子。单侄子需要调成一顺。然后父亲为轴向avatar旋转，把父亲借下来，兄弟顶上去父亲位置。
-//		*       父亲节点用原来父亲节点的颜色，兄弟一级黑色，没有子侄了。==>结束
-//		*         (50X)            (50X)             (50X)  |         (50X)           (50X)        (50X)
-//		*         /                /                 /      |         /               /            /
-//		*       (30X)            (30X)             (35X)    |       (30X)           (30X)        (25X)
-//		*       /   \            /   \             /   \    |       /   \           /   \        /   \
-//		*   A(20B) (40X)     A(20B) (35X)       (30B) (40B) |    (20X) A(40B)    (25X) A(40B) (20X)  (30B)
-//		*          /                     \                  |        \           /
-//		*       (35X)                    (40X)              |        (25X)    (20X)
-//		*         A是末端，所以兄弟下面不会再有了
-//		 */
-//		if avatarNode.Parent.Left == avatarNode { // [3.2.1]兄弟有1个侄子，我在父亲左手
-//			if brotherNode.Left != nil { // 侄子在兄弟的左手(不顺)，斩不定色，兄弟为轴右转
-//				_ = RightRotate(brotherNode)
-//			}
-//			// 父亲、兄弟、侄子顺了，先定色，父亲为轴右转。==》结束
-//			avatarNode.Parent.Right.IsRed = avatarNode.Parent.IsRed // 原兄弟，继承父亲颜色
-//			avatarNode.Parent.IsRed = false                         // 原父亲，黑色
-//			avatarNode.Parent.Right.Right.IsRed = false             // 原侄子，黑色
-//			_ = LeftRotate(avatarNode.Parent)
-//			avatarNode.Parent.Left = nil
-//			avatarNode.Parent = nil
-//			return
-//		} else { // [3.2.2]兄弟有1个侄子，我在父亲右手
-//			if brotherNode.Right != nil { // 侄子在兄弟的右手(不顺)，斩不定色，兄弟为轴左转
-//				_ = LeftRotate(brotherNode)
-//			}
-//			// 父亲、兄弟、侄子顺了，先定色，父亲为轴左转。==》结束
-//			avatarNode.Parent.Left.IsRed = avatarNode.Parent.IsRed // 原兄弟，继承父亲颜色
-//			avatarNode.Parent.IsRed = false                        // 原父亲，黑色
-//			avatarNode.Parent.Left.Left.IsRed = false              // 原侄子，黑色
-//			_ = RightRotate(avatarNode.Parent)
-//			avatarNode.Parent.Right = nil
-//			avatarNode.Parent = nil
-//			return
-//		}
-//
-//		//return
-//	}
-//
-//	// [4]自己搞不定，相当于234树的二节点，234树的兄弟(二节点)也没得借，删掉唯一黑色后，兄弟变红
-//	// [4.1]父红==》变黑==》结束。可能需要递归。走插入节点的双红
-//	// [4.2]父黑==》父亲作为传参，走递归的删除后调整 FixAfterDelete()
-//	if avatarNode.Left == nil &&
-//		avatarNode.Right == nil &&
-//		!avatarNode.IsRed &&
-//		brotherNode.Left == nil &&
-//		brotherNode.Right == nil {
-//		/* [4]自己搞不定，相当于234树的二节点，删掉唯一黑色后，把父亲借下来，234树的兄弟(二节点)也没得借。
-//		*       父亲节点用原来父亲节点的颜色，兄弟一级黑色，没有子侄了。==>结束
-//		*
-//		*               (70X)
-//		*               /
-//		*            (50X)
-//		*         /         \
-//		*      (30X)       (60X)
-//		*     /   \         /   \
-//		* A(20B) (40B)  A(55X) (65X)
-//		*
-//		 */
-//		if avatarNode.Parent.IsRed { // 父亲红
-//			avatarNode.Parent.IsRed = false           // 父亲黑
-//			if avatarNode.Parent.Left == avatarNode { // avatar 在左
-//				avatarNode.Parent.Right.IsRed = true // 兄弟红
-//				avatarNode.Parent.Left = nil         // avatar 删除
-//			} else { // avatar 在左
-//				avatarNode.Parent.Left.IsRed = true // 兄弟红
-//				avatarNode.Parent.Right = nil       // avatar 删除
-//			}
-//			return
-//		} else { // 父亲黑
-//			if avatarNode.Parent.Left == avatarNode { // avatar 在左
-//				avatarNode.Parent.Right.IsRed = true // 兄弟红
-//				avatarNode = avatarNode.Parent       // 转换一下防失联
-//				avatarNode.Left = nil                // 实际的avatar 删除
-//			} else { // avatar 在左
-//				avatarNode.Parent.Left.IsRed = true // 兄弟红
-//				avatarNode = avatarNode.Parent      // 转换一下防失联
-//				avatarNode.Right = nil              // 实际的avatar 删除
-//			}
-//			FixAfterDelete(avatarNode) // 开始递归调整(实际上是父亲)
-//		}
-//	}
-//
-//	if avatarNode == nil {
-//		fmt.Println("删除操作本节点内无法处理，又找不到替换节点，按说不应该出现这个提示的")
-//		return
-//	}
-//	fmt.Println()
-//	return
-//}
-//
-//// FixAfterDelete  删除后，定义“双黑节点”，找到“红”卸载一个黑出去，可能递归
-//// @avatar black+black双黑属性节点
-//func FixAfterDelete(avatar *rbtmodels.RBTNode) {
-//	/* avatar 实际是双黑节点，就是前面
-//	* [3]avatar 为黑色，这时候是递归，avatar和兄弟都可能有多级子节点
-//	* [3.1]avatar 黑兄红侄
-//	* [3.2]avatar 黑兄黑侄红父
-//	* [3.3]avatar 黑兄黑侄黑父
-//	* [3.4]avatar 红兄（黑侄黑父）
-//	 */
-//	//fmt.Printf("进入FixAfterDelete avatar==%d", avatar.Key)
-//	ShowTreeColor(global.Root)
-//	//err := errors.New("出错，本节点是空！")
-//	// [3.0] 双黑节点是根==》结束???不对吧，还是不平衡啊
-//	if avatar == global.Root {
-//		return
-//	}
-//
-//	isAvatarOnRight := avatar.Parent.Right == avatar // avatar 在右边
-//	parant := avatar.Parent                          // 父亲
-//	brother := parant.Right                          // 定义胸怀兄弟
-//	if isAvatarOnRight {
-//		brother = parant.Left
-//	}
-//	brothersLeftSon := brother.Left
-//	var brothersLeftSonIsRed bool
-//	if brothersLeftSon == nil {
-//		brothersLeftSonIsRed = true
-//	} else {
-//		brothersLeftSonIsRed = brothersLeftSon.IsRed
-//	}
-//	brothersRightSon := brother.Right
-//	var brothersRightSonIsRed bool
-//	if brothersRightSon == nil {
-//		brothersRightSonIsRed = true
-//	} else {
-//		brothersRightSonIsRed = brothersRightSon.IsRed
-//	}
-//
-//	// [3.1]avatar黑兄红侄
-//	/* [3.1.1]avatar在右，黑兄红侄.侄子左红右随意。==》原兄升父位继承父的颜色/原父下来变黑(填补双黑值)/原红侄黑==》父轴，右旋，==》结束
-//	*  [3.1.1.J]镜像，avatar在左
-//	*          (50Y)       |        (30Y)           ||        (50Y)           |          (70Y)       |
-//	*        /       \     |      /      \          ||      /      \          |        /       \     |
-//	*     (30B)     A(60B) |   (20B)     (50B)      ||  A(40B)     (70B)      |     (50B)      (80B) |
-//	*     /    \     / \   |   / \      /   \       ||   / \      /   \       |     /    \     / \   |
-//	*  (20R)  (40X)(?5)(?6)|(?1)(?2) (40X)  (60B)   ||(?1)(?2) (60X)  (80R)   |  (40R)  (60X)(?5)(?6)|
-//	*   / \    / \         |         / \      / \   ||         / \      / \   |   / \    / \         |
-//	*(?1)(?2)(?3)(?4)      |       (?3)(?4) (?5)(?6)||       (?3)(?4) (?5)(?6)|(?1)(?2)(?3)(?4)      |
-//	 */
-//	if (isAvatarOnRight && !brother.IsRed && brothersLeftSonIsRed) || // 在右
-//		(!isAvatarOnRight && !brother.IsRed && brothersRightSonIsRed) { // 镜像
-//		brother.IsRed = parant.IsRed // 原兄升父位继承父的颜色
-//		parant.IsRed = false         // 原父下来变黑(填补双黑值)
-//		if isAvatarOnRight {         // 在右
-//			brothersLeftSon.IsRed = false // 原红侄黑
-//			_ = RightRotate(parant)
-//		} else { // 镜像
-//			brothersRightSon.IsRed = false // 原红侄黑
-//			_ = LeftRotate(parant)
-//		}
-//		return // 结束
-//	}
-//
-//	/* [3.1.2]avatar在右，黑兄红侄.侄子左黑右红。==>原父下来变黑(填补双黑值)/原红侄升父位继承父的颜色==》兄轴左旋==》父轴，右旋，==》结束
-//	*  [3.1.2.J]镜像avatar在左，黑兄红侄.侄子右黑左红。==>原父下来变黑(填补双黑值)/原红侄升父位继承父的颜色==》兄轴右旋==》父轴，左旋，==》结束
-//	*          (50Y)       |          (50Y)      |         (40Y)        ||       (50Y)           |       (50Y)         |         (60Y)        |
-//	*        /       \     |        /      \     |       /      \       ||     /      \          |     /     \         |       /      \       |
-//	*     (30B)     A(60B) |     (40R)    A(60B) |    (30B)     (50B)   || A(40B)     (70B)      | A(40B)   (60R)      |    (5B)     (70B) c  |
-//	*     /    \     / \   |     /    \    / \   |    / \      /   \    ||  / \       /    \     |  /  \    / \        |    / \      /   \    |
-//	*  (20B)  (40R)(?5)(?6)|  (30B)  (?4)(?5)(?6)| (20B)(?3) (?4) (60B) ||(?1)(?2) (60R)  (80B)  |(?1)(?2)(?3)(70B)    | (40B)(?3) (?4) (80B) |
-//	*   / \    / \         |   / \               |  / \           /  \  ||          / \    / \   |             / \     |  / \           /  \  |
-//	*(?1)(?2)(?3)(?4)      |(20B)(?3)            |(?1)(?2)      (?5)(?6)||       (?3)(?4)(?5)(?6)|          (?4)(80B)  |(?1)(?2)      (?5)(?6)|
-//	*                      |  / \                |                      ||                       |               / \   |                      |
-//	*                      |(?1)(?2)             |                      ||                       |             (?5)(?6)|                      |
-//	 */
-//	if (isAvatarOnRight && !brother.IsRed && !brothersLeftSonIsRed && brothersRightSonIsRed) || // 在右
-//		(!isAvatarOnRight && !brother.IsRed && brothersLeftSonIsRed && !brothersRightSonIsRed) { // 镜像
-//		parant.IsRed = false // 原父下来变黑(填补双黑值)
-//		if isAvatarOnRight { // 在右
-//			brothersRightSon.IsRed = parant.IsRed // 原红侄升父位继承父的颜色
-//			_ = LeftRotate(brother)               // 兄轴左旋
-//			_ = RightRotate(parant)               // 父轴，右旋
-//		} else { // 镜像
-//			brothersLeftSon.IsRed = parant.IsRed // 原红侄升父位继承父的颜色
-//			_ = RightRotate(brother)             // 镜像
-//			_ = LeftRotate(parant)               // 镜像
-//		}
-//		return // 结束
-//	}
-//
-//	/* [3.2]avatar在左右都行，黑兄黑侄红父。==》父黑兄红==》结束
-//	* 对应2-3-4树删除操作中兄弟节点为2节点，父节点至少是个3节点，父节点key下移与兄弟节点合并。
-//	* 黑兄红侄.侄子左红右随意。==》父轴，右旋，父下来变黑(填补双黑值)/升父位的兄继承父的颜色/左侄黑==》结束
-//	*          (50R)       |          (50B)       |
-//	*        /       \     |        /       \     |
-//	*     (30B)     A(60B) |     (30R)     A(60B) |
-//	*     /    \     / \   |     /    \     / \   |
-//	*  (20B)  (40B)(?5)(?6)|  (20B)  (40B)(?5)(?6)|
-//	*   / \    / \         |   / \    / \         |
-//	*(?1)(?2)(?3)(?4)      |(?1)(?2)(?3)(?4)      |
-//	 */
-//	if parant.IsRed && !brother.IsRed && !brothersLeftSonIsRed && !brothersRightSonIsRed {
-//		parant.IsRed = false // 父黑
-//		brother.IsRed = true // 兄红
-//		return               // 结束
-//	}
-//
-//	/* [3.3]avatar在左右都行，黑兄黑侄黑父。==》兄红==》父亲做为avatar==》递归
-//	*          (50B)       |         A(50B)       ||        (30B)           |       A(30B)           |
-//	*        /       \     |        /       \     ||      /      \          |      /      \          |
-//	*     (30B)     A(60B) |     (30R)      (60B) ||  A(20B)     (50B)      |   (20B)     (50R)      |
-//	*     /    \     / \   |     /    \     / \   ||   / \      /   \       |   / \      /   \       |
-//	*  (20B)  (40B)(?5)(?6)|  (20B)  (40B)(?5)(?6)||(?1)(?2) (40B)  (60B)   |(?1)(?2) (40B)  (60B)   |
-//	*   / \    / \         |   / \    / \         ||         / \      / \   |         / \      / \   |
-//	*(?1)(?2)(?3)(?4)      |(?1)(?2)(?3)(?4)      ||       (?3)(?4) (?5)(?6)|       (?3)(?4) (?5)(?6)|
-//	 */
-//	if !parant.IsRed && !brother.IsRed && !brothersLeftSonIsRed && !brothersRightSonIsRed {
-//		brother.IsRed = true   // 兄红
-//		FixAfterDelete(parant) // 父亲作为双黑，递归
-//		return                 // 结束
-//	}
-//
-//	/* [3.4]avatar在右，红兄黑侄黑父。==>原兄黑，原父红==》父轴右旋==》avatar的新兄弟就是黑的==》用avatar递归（红父黑兄[3.2]）
-//	*  [3.4J]镜像avatar在左，红兄黑侄黑父。==>原兄黑，原父红==》父轴左旋==》avatar的新兄弟就是黑的==》用avatar递归（红父黑兄[3.2]）
-//	*  [注意]就地讨论avatar侄子是不是存在，否则递归下去默认侄子是全的
-//	*          (50B)       |        (30B)           ||        (50B)           |          (70B)       |
-//	*        /       \     |      /      \          ||      /      \          |        /       \     |
-//	*     (30R)     A(60B) |   (20B)     (50R)      ||  A(40B)     (70R)      |     (50R)      (80B) |
-//	*     /    \     / \   |   / \      /   \       ||   / \      /   \       |     /    \     / \   |
-//	*  (20B)  (40B)(?5)(?6)|(?1)(?2) (40B) A(60B)   ||(?1)(?2) (60B)  (80B)   | A(40B)  (60B)(?5)(?6)|
-//	*   / \    / \         |         / \      / \   ||         / \      / \   |   / \    / \         |
-//	*(?1)(?2)(?3)(?4)      |       (?3)(?4) (?5)(?6)||       (?3)(?4) (?5)(?6)|(?1)(?2)(?3)(?4)      |
-//	 */
-//	if !parant.IsRed && brother.IsRed && !brothersLeftSonIsRed && !brothersRightSonIsRed {
-//		brother.IsRed = false // 原父下来变黑(填补双黑值)
-//		parant.IsRed = true   // 原父下来变黑(填补双黑值)
-//		if isAvatarOnRight {  // 在右
-//			_ = RightRotate(parant) // 父轴，右旋
-//			// avatar依然在右
-//			parant = avatar.Parent // 父亲
-//			brother = parant.Left  // 定义兄弟
-//		} else { // 镜像
-//			_ = LeftRotate(parant) // 镜像
-//			// avatar依然在左
-//			parant = avatar.Parent // 父亲
-//			brother = parant.Right // 定义兄弟
-//		}
-//		// 这时，红父黑兄，侄子有没有都两说
-//		if brother.Left != nil && brother.Right != nil { // 有双侄子
-//			FixAfterDelete(avatar) // 有双侄子 avatar作为双黑，递归
-//			return
-//		}
-//		// 没侄子，单侄子，都不可能，avatar双黑，配不上
-//		fmt.Println("[3.4]没侄子，单侄子，都不可能，avatar双黑，配不上")
-//
-//		return // 结束
-//	}
-//}
-//
-//// Predecessor 找前驱节点。比我稍小的最大节点
-//func Predecessor(n *rbtmodels.RBTNode) (ret *rbtmodels.RBTNode) {
-//	if n == nil {
-//		fmt.Println("纳尼？让我给一个nil找前驱节点？")
-//		return nil
-//	}
-//	if n.Left != nil { // 有左儿子，找左儿子下面的最大
-//		ret = n.Left
-//		for {
-//			if ret.Right == nil { // 右下nil就算找到了
-//				return ret
-//			}
-//			ret = ret.Right // 沿着右手一直向下
-//		}
-//	} else { // 没有左儿子，向上找，每个和我比较，到root，返nil
-//		if n.Parent == nil { // 没左儿子，自己又是root
-//			fmt.Println("这个真没有，没左儿子，自己又是root")
-//			return nil
-//		}
-//		ret = n
-//		for {
-//			if ret.Parent == nil { // 游标移到本身是root，还没有找到，就nil了
-//				return nil
-//			} else {
-//				if ret.Parent.Key < n.Key { // 某个父辈小于我了，这个就是
-//					return ret.Parent
-//				}
-//			}
-//			ret = ret.Parent // 向上一直找
-//		}
-//	}
-//
-//}
-//
-//// Successor 找后继节点。比我稍大的最小节点
-//func Successor(n *rbtmodels.RBTNode) (ret *rbtmodels.RBTNode) {
-//	if n == nil {
-//		fmt.Println("纳尼？让我给一个nil找后继节点？")
-//		return nil
-//	}
-//	if n.Right != nil { // 有右儿子，找右儿子下面的最大
-//		ret = n.Right
-//		for {
-//			if ret.Left == nil { // 左下nil就算找到了
-//				return ret
-//			}
-//			ret = ret.Left // 沿着左手一直向下
-//		}
-//	} else { // 没有右儿子，向上找，每个和我比较，到root，返nil
-//		if n.Parent == nil { // 没右儿子，自己又是root
-//			fmt.Println("这个真没有，没右儿子，自己又是root")
-//			return nil
-//		}
-//		ret = n
-//		for {
-//			if ret.Parent == nil { // 游标移到本身是root，还没有找到，就nil了
-//				return nil
-//			} else {
-//				if ret.Parent.Key > n.Key { // 某个父辈小于我了，这个就是
-//					return ret.Parent
-//				}
-//			}
-//			ret = ret.Parent // 向上一直找
-//		}
-//	}
-//
-//}
+import (
+	"errors"
+	"fmt"
+	"go-b-tree-bplus-tree/btreemodels"
+	"go-b-tree-bplus-tree/global"
+	"go-b-tree-bplus-tree/globalconst"
+	"math/rand"
+)
+
+// Deletes 连续删除节点
+// @author https://github.com/BrotherSam66/
+func Deletes() {
+
+	for {
+		var key int
+		fmt.Println("请输入KEY，按回车键(空按回车随机,-1退出)：")
+		_, _ = fmt.Scanln(&key)
+
+		if key == -1 {
+			return
+		}
+		if key == 0 {
+			key = rand.Intn(global.MaxKey)
+			fmt.Println(key)
+		}
+
+		if key > 99 || key < 1 {
+			fmt.Println("必须是0~~99")
+			continue
+		}
+		Delete(key)
+		ShowTree(global.Root)
+	}
+}
+
+// Delete 删除节点
+// @key 键值
+// @author https://github.com/BrotherSam66/
+func Delete(key int) {
+
+	// 从root开始查找附加的位置
+	tempNode, isTarget, err := Search(key)
+	if err != nil {
+		fmt.Println("查找错误，error == ", err)
+		return
+	}
+	if !isTarget {
+		fmt.Println("没找到！ ")
+		return
+	}
+
+	// 非叶子，查找可替换的叶子节点的KEY值，交换。前序or后继均可，优先前序，前序节点数量<=globalconst.Min不容易删除就定死用后继
+	// 查到key在tempNode准确位置，deletePoint
+	deletePoint := 0
+	for deletePoint = 0; deletePoint < tempNode.KeyNum; deletePoint++ {
+		if tempNode.Key[deletePoint] == key { // 准确命中，只可能是新创建节点情形
+			break
+		}
+	}
+	if deletePoint >= tempNode.KeyNum {
+		fmt.Println("发生某种错误，找到KEY又不存在了！ ")
+		return
+	}
+	avatarNode := tempNode
+	if tempNode.Child[0] != nil { // 不是叶子
+		avatarNode, _ = PredecessorOrSuccessor(tempNode, key, true) // 用前驱节点做替身
+		// 考察avatarNode可简易删除？
+		if avatarNode.KeyNum <= globalconst.Min { // 不能简易删除
+			avatarNode, _ = PredecessorOrSuccessor(tempNode, key, false) // 用后继节点做替身
+			// 删除数据 对换 后继（一个神奇的语句）
+			tempNode.Key[deletePoint], avatarNode.Key[0] = avatarNode.Key[0], tempNode.Key[deletePoint]
+			tempNode.Payload[deletePoint], avatarNode.Payload[0] = avatarNode.Payload[0], tempNode.Payload[deletePoint]
+			deletePoint = 0
+		} else {
+			// 删除数据 对换 前驱（一个神奇的语句）
+			tempNode.Key[deletePoint], avatarNode.Key[avatarNode.KeyNum-1] = avatarNode.Key[avatarNode.KeyNum-1], tempNode.Key[deletePoint]
+			tempNode.Payload[deletePoint], avatarNode.Payload[avatarNode.KeyNum-1] = avatarNode.Payload[avatarNode.KeyNum-1], tempNode.Payload[deletePoint]
+			deletePoint = avatarNode.KeyNum - 1
+		}
+	}
+
+	// 到这里，KEY在叶子上，就开始删除的递归流程
+
+	_ = DeleteOneKey(avatarNode, key, deletePoint)
+
+	return
+}
+
+// DeleteOneKey 删除一个叶子上的KEY，可能要递归
+// @avatar 节点
+// @key 拟删除键值
+// @deletePoint 拟删除键值的位置
+// @author https://github.com/BrotherSam66/
+func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePoint int) (err error) {
+	if avatar.Key[deletePoint] != key {
+		err = errors.New("奇怪啊，指定的位置deletePoint键值不吻合啊")
+		fmt.Println("奇怪啊，指定的位置deletePoint键值不吻合啊")
+		return
+	}
+
+	// 删除掉这个key
+	_ = MoveKeysLeft(avatar, deletePoint, -1)
+
+	// 检查合法性，可能要递归
+	if avatar.KeyNum < globalconst.Min { // avatar节点过短，需要调整，可能递归
+		_ = FixAfterDelete(avatar)
+	}
+
+	return
+}
+
+// MoveKeysLeft 叶子的KEY，排队左移
+// @n 节点
+// @leftPoint 左面端点
+// @rightPoint 右面端点，-1表示最右
+// @author https://github.com/BrotherSam66/
+func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int) (err error) {
+	// 求rightPoint
+	isRightPointFull := false // 是满员的
+	if rightPoint < 0 {
+		rightPoint = n.KeyNum - 1
+	}
+	if rightPoint >= globalconst.M-2 { // 是满员的，尾部单独处理
+		isRightPointFull = true
+		rightPoint--
+	}
+	for i := leftPoint; i < rightPoint; i++ { // 逐个左移
+		n.Key[i] = n.Key[i+1]
+		n.Payload[i] = n.Payload[i+1]
+		// 叶子，Child都是nil
+	}
+	if isRightPointFull { // 满员，尾部单独处理
+		n.Key[rightPoint+1] = 0
+		n.Payload[rightPoint+1] = ""
+	}
+	n.KeyNum--
+	return
+}
+
+// FixAfterDelete 删除后调整
+// @avatar 节点
+// @author https://github.com/BrotherSam66/
+func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
+	// 如果该节点递归、上升到了root，结束
+	if avatar == global.Root {
+		return
+	}
+	// 2）该结点key个数大于等于Math.ceil(m/2)-1，结束删除操作，否则执行第3步。
+	if avatar.KeyNum >= globalconst.Min {
+		return
+	}
+	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
+	// 找出avatar的左右兄弟
+	leftBrother := avatar  // 临时定义
+	rightBrother := avatar // 临时定义
+	parent := avatar.Parent
+	// 找到 avatar 在父亲的排位
+	i := 0
+	for i = 0; i < parent.KeyNum; i++ {
+		if avatar.Key[0] < parent.Key[i] { // 小于，说明刚刚越过了，(用avatar任何Key都行)
+			break
+		}
+	}
+
+	// 找到兄弟后直接借KEY
+	isSuccess := false
+	if i == 0 { // 在最左
+		rightBrother = parent.Child[1]
+		isSuccess, _ = TryBorrowBrotherKey(avatar, rightBrother, false)
+		if isSuccess {
+			return
+		}
+	} else if i >= parent.KeyNum { // 在最右
+		leftBrother = parent.Child[parent.KeyNum-2]
+		isSuccess, _ = TryBorrowBrotherKey(avatar, leftBrother, true)
+		if isSuccess {
+			return
+		}
+	} else { // 居中，有左右2个兄弟
+		rightBrother = parent.Child[i+1]
+		isSuccess, _ = TryBorrowBrotherKey(avatar, rightBrother, false)
+		if isSuccess {
+			return
+		}
+		leftBrother = parent.Child[i-1]
+		isSuccess, _ = TryBorrowBrotherKey(avatar, leftBrother, true)
+		if isSuccess {
+			return
+		}
+	}
+
+	// 到这里，就是兄弟借不来。将父结点中的key下移与当前结点及它的兄弟结点中的key合并，形成一个新的结点。
+	// 原父结点中的key的两个孩子指针就变成了一个孩子指针，指向这个新结点。然后当前结点的指针指向父结点，重复上第2步。
+
+	return
+}
+
+// TryBorrowBrotherKey 尝试向兄弟借KEY
+// @avatar 本节点
+// @brother 兄弟节点
+// @isLeftBrother 左兄弟or右兄弟
+// @isSuccess 借节点成功了吗？
+// @author https://github.com/BrotherSam66/
+func TryBorrowBrotherKey(avatar *btreemodels.BTreeNode, brother *btreemodels.BTreeNode, isLeftBrother bool) (isSuccess bool, err error) {
+	if brother.KeyNum <= globalconst.Min { // 兄弟太短，没得借
+		return
+	}
+	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
+	/*
+	 *假设：5阶，最大4个KEY、最小2个KEY，
+	 *  (20|60             |              80|nil)|  (20|50             |              80|nil)|
+	 *  /   \              \                \    |  /   \              \                \    |
+	 *(?1)(30|40|50|nil) (70|nil|nil|nil)  (?3)  |(?1)(30|40|nil|nil) (60|70|nil|nil)  (?3)  |
+	 *
+	 *(70)右边刚删掉(75)，(60)下来并入(70)，(50)上去，填补(60)
+	 */
+	isSuccess = true
+	return
+}
+
+/*
+ *    B树的删除操作 https://www.cnblogs.com/nullzx/p/8729425.html
+ *    删除操作是指，根据key删除记录，如果B树中的记录中不存对应key的记录，则删除失败。
+ * 1）如果当前需要删除的key位于非叶子结点上，则用后继key（这里的后继key均指后继记录的意思）覆盖要删除的key，
+ * 然后在后继key所在的子支中删除该后继key。此时后继key一定位于叶子结点上，这个过程和二叉搜索树删除结点的方式类似。删除这个记录后执行第2步
+ * 2）该结点key个数大于等于Math.ceil(m/2)-1，结束删除操作，否则执行第3步。
+ * 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
+ *    否则，将父结点中的key下移与当前结点及它的兄弟结点中的key合并，形成一个新的结点。原父结点中的key的两个孩子指针就变成了一个孩子指针，
+ * 指向这个新结点。然后当前结点的指针指向父结点，重复上第2步。
+ *    有些结点它可能即有左兄弟，又有右兄弟，那么我们任意选择一个兄弟结点进行操作即可。
+ */
 
 // 上下交换与i个key，明确上下分别交换第几位key
 

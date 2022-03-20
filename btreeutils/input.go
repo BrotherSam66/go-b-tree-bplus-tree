@@ -70,7 +70,8 @@ func Insert(key int, payload string) {
 	if err != nil {
 		fmt.Println("没找到or查找错误，error == ", err)
 		return
-	} else if isTarget { // 拟插入的key存在，替换payload就好
+	}
+	if isTarget { // 拟插入的key存在，替换payload就好
 		// 寻找替换的位置
 		for j := 0; j < tempNode.KeyNum; j++ {
 			if tempNode.Key[j] == key { // 准确命中，只可能是新创建节点情形
