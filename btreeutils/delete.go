@@ -106,54 +106,64 @@ func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePoint int) (err 
 	}
 
 	// 删除掉这个key
-	_ = MoveKeysLeft(avatar, deletePoint, -1)
+	_ = MoveKeysLeft(avatar, deletePoint, -1, 0, "", nil)
 
 	// 检查合法性，可能要递归
-	if avatar.KeyNum < globalconst.Min { // avatar节点过短，需要调整，可能递归
+	if avatar.KeyNum < globalconst.Min && avatar.Parent != nil { // avatar节点过短 && 不是root，需要调整，可能递归
 		_ = FixAfterDelete(avatar)
+	}
+
+	if avatar.KeyNum == 0 && avatar.Parent == nil { // avatar节点过短 && 不是root，需要调整，可能递归
+		global.Root = nil
 	}
 
 	return
 }
 
-// MoveKeysLeft 叶子的KEY，排队左移
+// EraseKeys 抹除部分KEY，必须是右侧的 todo 主要是分裂的时候用
 // @n 节点
 // @leftPoint 左面端点
 // @rightPoint 右面端点，-1表示最右
 // @author https://github.com/BrotherSam66/
-func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int) (err error) {
-	// 求rightPoint
-	isRightPointFull := false // 是满员的
-	if rightPoint < 0 {
-		rightPoint = n.KeyNum - 1
+func EraseKeys(n *btreemodels.BTreeNode, leftPoint int, rightPoint int) (err error) {
+	if n == nil {
+		err = errors.New("出错，n是nil！")
+		fmt.Println(err.Error())
+		return
 	}
-	if rightPoint >= globalconst.M-2 { // 是满员的，尾部单独处理
-		isRightPointFull = true
-		rightPoint--
+	if leftPoint <= 0 {
+		err = errors.New("出错，leftPoint必须是>0！")
+		fmt.Println(err.Error())
+		return
 	}
-	for i := leftPoint; i < rightPoint; i++ { // 逐个左移
-		n.Key[i] = n.Key[i+1]
-		n.Payload[i] = n.Payload[i+1]
-		// 叶子，Child都是nil
+	if rightPoint < leftPoint {
+		err = errors.New("出错，rightPoint < leftPoint")
+		fmt.Println(err.Error())
+		return
 	}
-	if isRightPointFull { // 满员，尾部单独处理
-		n.Key[rightPoint+1] = 0
-		n.Payload[rightPoint+1] = ""
+
+	for i := leftPoint; i <= rightPoint; i++ {
+		n.Key[i] = 0
+		n.Payload[i] = ""
+		n.Child[i+1] = nil
 	}
-	n.KeyNum--
+
+	n.KeyNum = n.KeyNum - 1 - rightPoint + leftPoint
 	return
 }
 
 // FixAfterDelete 删除后调整
-// @avatar 节点
+// @avatar 递归的节点
 // @author https://github.com/BrotherSam66/
 func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 	// 如果该节点递归、上升到了root，结束
-	if avatar == global.Root {
+	if avatar.Parent == nil {
+		global.Root = avatar
+
 		return
 	}
 	// 2）该结点key个数大于等于Math.ceil(m/2)-1，结束删除操作，否则执行第3步。
-	if avatar.KeyNum >= globalconst.Min {
+	if avatar.KeyNum >= globalconst.Min || avatar.Parent == nil {
 		return
 	}
 	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
@@ -162,35 +172,35 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 	rightBrother := avatar // 临时定义
 	parent := avatar.Parent
 	// 找到 avatar 在父亲的排位
-	i := 0
-	for i = 0; i < parent.KeyNum; i++ {
-		if avatar.Key[0] < parent.Key[i] { // 小于，说明刚刚越过了，(用avatar任何Key都行)
+	avatarPoint := 0
+	for avatarPoint = 0; avatarPoint < parent.KeyNum; avatarPoint++ {
+		if avatar.Key[0] < parent.Key[avatarPoint] { // 小于，说明刚刚越过了，(用avatar任何Key都行)
 			break
 		}
 	}
 
 	// 找到兄弟后直接借KEY
 	isSuccess := false
-	if i == 0 { // 在最左
+	if avatarPoint == 0 { // 在最左
 		rightBrother = parent.Child[1]
-		isSuccess, _ = TryBorrowBrotherKey(avatar, rightBrother, false)
+		isSuccess, _ = TryBorrowBrotherKey(rightBrother, false)
 		if isSuccess {
 			return
 		}
-	} else if i >= parent.KeyNum { // 在最右
-		leftBrother = parent.Child[parent.KeyNum-2]
-		isSuccess, _ = TryBorrowBrotherKey(avatar, leftBrother, true)
+	} else if avatarPoint >= parent.KeyNum { // 在最右
+		leftBrother = parent.Child[avatarPoint-1]
+		isSuccess, _ = TryBorrowBrotherKey(leftBrother, true)
 		if isSuccess {
 			return
 		}
 	} else { // 居中，有左右2个兄弟
-		rightBrother = parent.Child[i+1]
-		isSuccess, _ = TryBorrowBrotherKey(avatar, rightBrother, false)
+		rightBrother = parent.Child[avatarPoint+1]
+		isSuccess, _ = TryBorrowBrotherKey(rightBrother, false)
 		if isSuccess {
 			return
 		}
-		leftBrother = parent.Child[i-1]
-		isSuccess, _ = TryBorrowBrotherKey(avatar, leftBrother, true)
+		leftBrother = parent.Child[avatarPoint-1]
+		isSuccess, _ = TryBorrowBrotherKey(leftBrother, true)
 		if isSuccess {
 			return
 		}
@@ -198,19 +208,38 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 
 	// 到这里，就是兄弟借不来。将父结点中的key下移与当前结点及它的兄弟结点中的key合并，形成一个新的结点。
 	// 原父结点中的key的两个孩子指针就变成了一个孩子指针，指向这个新结点。然后当前结点的指针指向父结点，重复上第2步。
-
+	/*
+	 *假设：5阶，最大4个KEY、最小2个KEY，
+	 *  (20|60             |              80|nil)|  (20|50             |              80|nil)|
+	 *  /   \              \                \    |  /   \              \                \    |
+	 *(?1)(30|40|nil|nil) (70|nil|nil|nil)  (?3)  |(?1)(30|40|nil|nil) (60|70|nil|nil)  (?3)  |
+	 *
+	 *向父亲借(60)形成(30|40|60|70)，父亲指向20的右腿，(20)去递归
+	 */
+	if avatarPoint == 0 { // 在最左,只能用右兄弟
+		rightBrother = parent.Child[1]
+		_ = Merge3Nodes(avatar, parent, rightBrother, avatarPoint) // 三个节点合并
+	} else { // 优先用左兄弟
+		leftBrother = parent.Child[avatarPoint-1]
+		_ = Merge3Nodes(leftBrother, parent, avatar, avatarPoint-1) // 三个节点合并
+	}
+	if parent.KeyNum == 0 && parent.Parent == nil {
+		global.Root = avatar
+		return
+	}
+	_ = FixAfterDelete(parent) // 递归了
 	return
 }
 
-// TryBorrowBrotherKey 尝试向兄弟借KEY
+// TryBorrowBrotherKey 尝试向兄弟借KEY，只是判断能不能
 // @avatar 本节点
 // @brother 兄弟节点
 // @isLeftBrother 左兄弟or右兄弟
 // @isSuccess 借节点成功了吗？
 // @author https://github.com/BrotherSam66/
-func TryBorrowBrotherKey(avatar *btreemodels.BTreeNode, brother *btreemodels.BTreeNode, isLeftBrother bool) (isSuccess bool, err error) {
+func TryBorrowBrotherKey(brother *btreemodels.BTreeNode, isLeftBrother bool) (isSuccess bool, err error) {
 	if brother.KeyNum <= globalconst.Min { // 兄弟太短，没得借
-		return
+		return // 不算error，isSuccess=false就可
 	}
 	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
 	/*
@@ -221,6 +250,11 @@ func TryBorrowBrotherKey(avatar *btreemodels.BTreeNode, brother *btreemodels.BTr
 	 *
 	 *(70)右边刚删掉(75)，(60)下来并入(70)，(50)上去，填补(60)
 	 */
+	if isLeftBrother { // 是企图向左兄弟借
+		_ = RightRotate(brother) // 右转，就算完整借完
+	} else { // 是企图向右兄弟借
+		_ = LeftRotate(brother) // 左转，就算完整借完
+	}
 	isSuccess = true
 	return
 }
@@ -236,15 +270,3 @@ func TryBorrowBrotherKey(avatar *btreemodels.BTreeNode, brother *btreemodels.BTr
  * 指向这个新结点。然后当前结点的指针指向父结点，重复上第2步。
  *    有些结点它可能即有左兄弟，又有右兄弟，那么我们任意选择一个兄弟结点进行操作即可。
  */
-
-// 上下交换与i个key，明确上下分别交换第几位key
-
-// 左右合并函数
-
-// 左右分裂函数 明确 从哪个位置分裂
-
-// 元素向左移动
-
-// 元素向右移动
-//_=MoveKeys(n,)
-// 部分元素 迁徙（key位序一般会不一样）

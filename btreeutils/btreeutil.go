@@ -12,6 +12,8 @@ import (
 	"strings"
 )
 
+// BtreeDemo B树 演示
+// @author https://github.com/BrotherSam66/
 func BtreeDemo() {
 	for {
 		var command string
