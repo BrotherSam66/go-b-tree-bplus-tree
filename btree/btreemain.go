@@ -1,20 +1,20 @@
-// Package btreeutils
+// Package btree
 // @Title B树工具包
 // @Description  总纲
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package btreeutils
+package btree
 
 import (
 	"fmt"
-	"go-b-tree-bplus-tree/global"
+	"go-b-tree-bplus-tree/btree/btreeglobal"
 	"os"
 	"strings"
 )
 
-// BtreeDemo B树 演示
+// BTreeDemo B树 演示
 // @author https://github.com/BrotherSam66/
-func BtreeDemo() {
+func BTreeDemo() {
 	for {
 		var command string
 		fmt.Println("I Insert插入数据")
@@ -33,7 +33,7 @@ func BtreeDemo() {
 		case "I":
 			Inputs()
 		case "S":
-			ShowTree(global.Root)
+			ShowTree(btreeglobal.Root)
 		case "F":
 			var key int
 			fmt.Println("请输入KEY，按回车键(0退出)：")

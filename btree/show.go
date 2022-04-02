@@ -1,13 +1,13 @@
-// Package btreeutils
+// Package btree
 // @Title B树工具包
 // @Description  显示节点
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package btreeutils
+package btree
 
 import (
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 )
 
 // ShowTree 逐层显示这个树，

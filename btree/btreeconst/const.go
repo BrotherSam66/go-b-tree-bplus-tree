@@ -1,9 +1,9 @@
-// Package globalconst
+// Package btreeconst
 // @Title B树全局常量
 // @Description  全局常量
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package globalconst
+package btreeconst
 
 // M M阶B树
 const M int = 5

@@ -1,10 +1,10 @@
-package btreeutils
+package bplustree
 
 import (
 	"errors"
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
-	"go-b-tree-bplus-tree/globalconst"
+	"go-b-tree-bplus-tree/btree/btreeconst"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 )
 
 // RightRotate 右旋
@@ -54,7 +54,7 @@ func RightRotate(p *btreemodels.BTreeNode) (err error) {
 
 	// 查找右兄弟，右兄弟满员否
 	rightBrother := parent.Child[downPoint+1]
-	if rightBrother.KeyNum >= globalconst.M-1 {
+	if rightBrother.KeyNum >= btreeconst.M-1 {
 		err = errors.New("出错，右兄弟是满员的！")
 		fmt.Println(err.Error())
 		return
@@ -68,7 +68,7 @@ func RightRotate(p *btreemodels.BTreeNode) (err error) {
 	parent.Key[downPoint] = upKey                                           // 父位的Key
 	parent.Payload[downPoint] = p.Payload[p.KeyNum-1]                       // 父位的载荷。
 	// （父位不动孩子）
-	_ = EraseKeys(p, p.KeyNum-1, p.KeyNum-1) // 只是抹掉最后1位
+	//_ = EraseKeys(p, p.KeyNum-1, p.KeyNum-1) // 只是抹掉最后1位
 	return
 }
 
@@ -113,7 +113,7 @@ func LeftRotate(p *btreemodels.BTreeNode) (err error) {
 
 	// 查找左兄弟，左兄弟满员否
 	leftBrother := parent.Child[downPoint]
-	if leftBrother.KeyNum >= globalconst.M-1 {
+	if leftBrother.KeyNum >= btreeconst.M-1 {
 		err = errors.New("出错，左兄弟是满员的！")
 		fmt.Println(err.Error())
 		return

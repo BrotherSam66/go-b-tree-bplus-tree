@@ -1,12 +1,12 @@
-// Package global
+// Package btreeglobal
 // @Title B树全局变量
 // @Description  全局变量
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package global
+package btreeglobal
 
 import (
-	"go-b-tree-bplus-tree/btreemodels"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 )
 
 // Root 根

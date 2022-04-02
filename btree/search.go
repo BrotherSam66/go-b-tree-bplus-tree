@@ -1,15 +1,15 @@
-// Package btreeutils
+// Package btree
 // @Title B树工具包
 // @Description  查找节点
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package btreeutils
+package btree
 
 import (
 	"errors"
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
-	"go-b-tree-bplus-tree/global"
+	"go-b-tree-bplus-tree/btree/btreeglobal"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 )
 
 // Search 查找节点
@@ -18,14 +18,14 @@ import (
 // @isTarget 找到的是命中的节点
 // @Author  https://github.com/BrotherSam66/
 func Search(key int) (tempNode *btreemodels.BTreeNode, isTarget bool, err error) {
-	if global.Root == nil {
+	if btreeglobal.Root == nil {
 		fmt.Println("这个树/分支是空的")
 		return nil, false, errors.New("这个树/分支是空的！")
 	}
 
-	tempNode = global.Root // 临时的指针
-	var i int              // 循环外定义，是因为循环后要用到这个变量
-	for {                  // 递归循环
+	tempNode = btreeglobal.Root // 临时的指针
+	var i int                   // 循环外定义，是因为循环后要用到这个变量
+	for {                       // 递归循环
 		// 循环本层关键字key[]
 		for i = 0; i < tempNode.KeyNum; i++ {
 			if key == tempNode.Key[i] { // 准确命中，完美找到，不管是否叶子，返回

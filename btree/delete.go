@@ -1,16 +1,16 @@
-// Package btreeutils
+// Package btree
 // @Title B树工具包
 // @Description  和删除节点有关的操作
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package btreeutils
+package btree
 
 import (
 	"errors"
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
-	"go-b-tree-bplus-tree/global"
-	"go-b-tree-bplus-tree/globalconst"
+	"go-b-tree-bplus-tree/btree/btreeconst"
+	"go-b-tree-bplus-tree/btree/btreeglobal"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 	"math/rand"
 )
 
@@ -27,7 +27,7 @@ func Deletes() {
 			return
 		}
 		if key == 0 {
-			key = rand.Intn(global.MaxKey)
+			key = rand.Intn(btreeglobal.MaxKey)
 			fmt.Println(key)
 		}
 
@@ -36,7 +36,7 @@ func Deletes() {
 			continue
 		}
 		Delete(key)
-		ShowTree(global.Root)
+		ShowTree(btreeglobal.Root)
 	}
 }
 
@@ -56,7 +56,7 @@ func Delete(key int) {
 		return
 	}
 
-	// 非叶子，查找可替换的叶子节点的KEY值，交换。前序or后继均可，优先前序，前序节点数量<=globalconst.Min不容易删除就定死用后继
+	// 非叶子，查找可替换的叶子节点的KEY值，交换。前序or后继均可，优先前序，前序节点数量<=btreeconst.Min不容易删除就定死用后继
 	// 查到key在tempNode准确位置，deletePoint
 	deletePoint := 0
 	for deletePoint = 0; deletePoint < tempNode.KeyNum; deletePoint++ {
@@ -72,7 +72,7 @@ func Delete(key int) {
 	if tempNode.Child[0] != nil { // 不是叶子
 		avatarNode, _ = PredecessorOrSuccessor(tempNode, key, true) // 用前驱节点做替身
 		// 考察avatarNode可简易删除？
-		if avatarNode.KeyNum <= globalconst.Min { // 不能简易删除
+		if avatarNode.KeyNum <= btreeconst.Min { // 不能简易删除
 			avatarNode, _ = PredecessorOrSuccessor(tempNode, key, false) // 用后继节点做替身
 			// 删除数据 对换 后继（一个神奇的语句）
 			tempNode.Key[deletePoint], avatarNode.Key[0] = avatarNode.Key[0], tempNode.Key[deletePoint]
@@ -109,12 +109,12 @@ func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePoint int) (err 
 	_ = MoveKeysLeft(avatar, deletePoint, -1, 0, "", nil)
 
 	// 检查合法性，可能要递归
-	if avatar.KeyNum < globalconst.Min && avatar.Parent != nil { // avatar节点过短 && 不是root，需要调整，可能递归
+	if avatar.KeyNum < btreeconst.Min && avatar.Parent != nil { // avatar节点过短 && 不是root，需要调整，可能递归
 		_ = FixAfterDelete(avatar)
 	}
 
 	if avatar.KeyNum == 0 && avatar.Parent == nil { // avatar节点过短 && 不是root，需要调整，可能递归
-		global.Root = nil
+		btreeglobal.Root = nil
 	}
 
 	return
@@ -158,12 +158,12 @@ func EraseKeys(n *btreemodels.BTreeNode, leftPoint int, rightPoint int) (err err
 func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 	// 如果该节点递归、上升到了root，结束
 	if avatar.Parent == nil {
-		global.Root = avatar
+		btreeglobal.Root = avatar
 
 		return
 	}
 	// 2）该结点key个数大于等于Math.ceil(m/2)-1，结束删除操作，否则执行第3步。
-	if avatar.KeyNum >= globalconst.Min || avatar.Parent == nil {
+	if avatar.KeyNum >= btreeconst.Min || avatar.Parent == nil {
 		return
 	}
 	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。
@@ -224,7 +224,7 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 		_ = Merge3Nodes(leftBrother, parent, avatar, avatarPoint-1) // 三个节点合并
 	}
 	if parent.KeyNum == 0 && parent.Parent == nil {
-		global.Root = avatar
+		btreeglobal.Root = avatar
 		return
 	}
 	_ = FixAfterDelete(parent) // 递归了
@@ -238,7 +238,7 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 // @isSuccess 借节点成功了吗？
 // @author https://github.com/BrotherSam66/
 func TryBorrowBrotherKey(brother *btreemodels.BTreeNode, isLeftBrother bool) (isSuccess bool, err error) {
-	if brother.KeyNum <= globalconst.Min { // 兄弟太短，没得借
+	if brother.KeyNum <= btreeconst.Min { // 兄弟太短，没得借
 		return // 不算error，isSuccess=false就可
 	}
 	// 3）如果兄弟结点key个数大于Math.ceil(m/2)-1，则父结点中的key下移到该结点，兄弟结点中的一个key上移，删除操作结束。

@@ -6,17 +6,17 @@
 package btreemodels
 
 import (
-	"go-b-tree-bplus-tree/globalconst"
+	"go-b-tree-bplus-tree/btree/btreeconst"
 )
 
 // BTreeNode B树结构模型
 // @Author  https://github.com/BrotherSam66/
 type BTreeNode struct {
-	Parent  *BTreeNode                //指向父节点的指针
-	KeyNum  int                       //关键字个数
-	Key     [globalconst.M - 1]int    //关键字向量
-	Payload [globalconst.M - 1]string // 本Key的负载信息
-	Child   [globalconst.M]*BTreeNode //子树指针向量
+	Parent  *BTreeNode               //指向父节点的指针
+	KeyNum  int                      //关键字个数
+	Key     [btreeconst.M - 1]int    //关键字向量
+	Payload [btreeconst.M - 1]string // 本Key的负载信息
+	Child   [btreeconst.M]*BTreeNode //子树指针向量
 }
 
 // NewBTreeNode 构造函数
@@ -28,10 +28,10 @@ type BTreeNode struct {
 func NewBTreeNode(parent *BTreeNode, keyNum int, key int, payload string) *BTreeNode {
 	return &BTreeNode{
 		Parent:  parent,
-		KeyNum:  keyNum,                      // 新创建得通常都会是1
-		Key:     [globalconst.M - 1]int{key}, // 暂时放在[0]位。todo 这里数组长度和初始化元素个数不符合可能有问题
-		Payload: [globalconst.M - 1]string{payload},
-		//Payload: [globalconst.M - 1]string{fmt.Sprintf("%d", key)},
+		KeyNum:  keyNum,                     // 新创建得通常都会是1
+		Key:     [btreeconst.M - 1]int{key}, // 暂时放在[0]位。todo 这里数组长度和初始化元素个数不符合可能有问题
+		Payload: [btreeconst.M - 1]string{payload},
+		//Payload: [btreeconst.M - 1]string{fmt.Sprintf("%d", key)},
 	}
 }
 

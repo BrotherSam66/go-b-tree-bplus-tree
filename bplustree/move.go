@@ -1,10 +1,10 @@
-package btreeutils
+package bplustree
 
 import (
 	"errors"
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
-	"go-b-tree-bplus-tree/globalconst"
+	"go-b-tree-bplus-tree/btree/btreeconst"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 )
 
 // MoveKeysLeft 叶子的KEY，排队左移
@@ -19,8 +19,8 @@ func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, tailK
 	if rightPoint == -1 {
 		rightPoint = n.KeyNum - 1
 	}
-	endPoint := rightPoint             // 循环结束位
-	if rightPoint == globalconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+	endPoint := rightPoint            // 循环结束位
+	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
 		endPoint--
 	}
 	for i := leftPoint; i <= endPoint; i++ { // 逐个左移
@@ -30,7 +30,7 @@ func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, tailK
 	}
 	n.Child[endPoint] = n.Child[endPoint+1] // 右腿，补一下
 
-	if rightPoint == globalconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
 		n.Key[rightPoint] = tailKey
 		n.Payload[rightPoint] = tailPayLoad
 		n.Child[rightPoint+1] = tailChild // 只补右腿，左腿前面处理好了
@@ -53,8 +53,8 @@ func MoveKeysLeftWithoutLeftChild(n *btreemodels.BTreeNode, leftPoint int, right
 	if rightPoint == -1 {
 		rightPoint = n.KeyNum - 1
 	}
-	endPoint := rightPoint             // 循环结束位
-	if rightPoint == globalconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+	endPoint := rightPoint            // 循环结束位
+	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
 		endPoint--
 	}
 	for i := leftPoint; i <= endPoint; i++ { // 逐个左移
@@ -63,7 +63,7 @@ func MoveKeysLeftWithoutLeftChild(n *btreemodels.BTreeNode, leftPoint int, right
 		n.Child[i+1] = n.Child[i+2]
 	}
 
-	if rightPoint == globalconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
 		n.Key[rightPoint] = tailKey
 		n.Payload[rightPoint] = tailPayLoad
 		n.Child[rightPoint+1] = tailChild // 只补右腿，左腿前面处理好了
@@ -94,7 +94,7 @@ func MoveKeysRight(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, head
 		fmt.Println(err.Error())
 		return
 	}
-	if n.KeyNum >= globalconst.M-1 {
+	if n.KeyNum >= btreeconst.M-1 {
 		err = errors.New("出错，本节点满的，加不进来！")
 		fmt.Println(err.Error())
 		return
@@ -122,7 +122,7 @@ func MoveKeysRight(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, head
 // @avatarPoint 父节点下来Key的位置
 // @author https://github.com/BrotherSam66/
 func Merge3Nodes(leftSan *btreemodels.BTreeNode, parent *btreemodels.BTreeNode, rightSan *btreemodels.BTreeNode, avatarPoint int) (err error) {
-	if leftSan.KeyNum+1+rightSan.KeyNum > globalconst.M-1 {
+	if leftSan.KeyNum+1+rightSan.KeyNum > btreeconst.M-1 {
 		err = errors.New("三个节点Key叠加起来溢出！")
 		fmt.Println(err.Error())
 		return
@@ -156,7 +156,7 @@ func Merge3Nodes(leftSan *btreemodels.BTreeNode, parent *btreemodels.BTreeNode, 
 // @rightSan 准备被合并的节点
 // @author https://github.com/BrotherSam66/
 func Merge2Nodes(leftSan *btreemodels.BTreeNode, rightSan *btreemodels.BTreeNode) (err error) {
-	if leftSan.KeyNum+rightSan.KeyNum > globalconst.M-1 {
+	if leftSan.KeyNum+rightSan.KeyNum > btreeconst.M-1 {
 		err = errors.New("2个节点Key叠加起来溢出！")
 		fmt.Println(err.Error())
 		return
@@ -187,41 +187,41 @@ func Merge2Nodes(leftSan *btreemodels.BTreeNode, rightSan *btreemodels.BTreeNode
 // @isUpRoot
 // @author https://github.com/BrotherSam66/
 func SplitTo3Node(n *btreemodels.BTreeNode, keyTail int, payloadTail string, childTail *btreemodels.BTreeNode) (upNode *btreemodels.BTreeNode, isUpRoot bool, err error) {
-	rightSan := btreemodels.NewBTreeNode(nil, 1, n.Key[globalconst.M/2+1], n.Payload[globalconst.M/2+1]) // 缺很多参数没加
-	upNode = btreemodels.NewBTreeNode(nil, 1, n.Key[globalconst.M/2], n.Payload[globalconst.M/2])        // 缺很多参数没加
+	rightSan := btreemodels.NewBTreeNode(nil, 1, n.Key[btreeconst.M/2+1], n.Payload[btreeconst.M/2+1]) // 缺很多参数没加
+	upNode = btreemodels.NewBTreeNode(nil, 1, n.Key[btreeconst.M/2], n.Payload[btreeconst.M/2])        // 缺很多参数没加
 
-	upNode.Child[0] = n                            // 上升的左腿
-	upNode.Child[1] = rightSan                     // 上升的右腿
-	rightSan.Parent = upNode                       // 右儿子的爹
-	rightSan.Child[0] = n.Child[globalconst.M/2+1] // 预先补上右儿子的左腿，每个Key的右腿后面的循环里补
+	upNode.Child[0] = n                           // 上升的左腿
+	upNode.Child[1] = rightSan                    // 上升的右腿
+	rightSan.Parent = upNode                      // 右儿子的爹
+	rightSan.Child[0] = n.Child[btreeconst.M/2+1] // 预先补上右儿子的左腿，每个Key的右腿后面的循环里补
 	if rightSan.Child[0] != nil {
 		rightSan.Child[0].Parent = rightSan // 右儿子的每一个孙子. Parent 都要重新指向
 	}
 
-	// 补右儿子。例如 globalconst.M=10最大9个key；n.KeyNum=9目前多插一个共10个key；升起5号，左儿子0~4，右儿子6~9，首KEY6号已加，下面重新循环6~9，9要单独做
-	for j := globalconst.M/2 + 1; j < globalconst.M-1; j++ { // 例如①M=10，循环6~8；M=9，循环5~7；M=5，循环3~3
-		rightSan.Key[j-globalconst.M/2-1] = n.Key[j]         // 第一个是0，最后一个是(M+1)/2-2
-		rightSan.Payload[j-globalconst.M/2-1] = n.Payload[j] // 第一个是0，最后一个是(M+1)/2-2
-		rightSan.Child[j-globalconst.M/2] = n.Child[j+1]     // 第一个是1，补每个Key右边的腿
-		if rightSan.Child[j-globalconst.M/2] != nil {
-			rightSan.Child[j-globalconst.M/2].Parent = rightSan // 右儿子的每一个孙子. Parent 都要重新指向
+	// 补右儿子。例如 btreeconst.M=10最大9个key；n.KeyNum=9目前多插一个共10个key；升起5号，左儿子0~4，右儿子6~9，首KEY6号已加，下面重新循环6~9，9要单独做
+	for j := btreeconst.M/2 + 1; j < btreeconst.M-1; j++ { // 例如①M=10，循环6~8；M=9，循环5~7；M=5，循环3~3
+		rightSan.Key[j-btreeconst.M/2-1] = n.Key[j]         // 第一个是0，最后一个是(M+1)/2-2
+		rightSan.Payload[j-btreeconst.M/2-1] = n.Payload[j] // 第一个是0，最后一个是(M+1)/2-2
+		rightSan.Child[j-btreeconst.M/2] = n.Child[j+1]     // 第一个是1，补每个Key右边的腿
+		if rightSan.Child[j-btreeconst.M/2] != nil {
+			rightSan.Child[j-btreeconst.M/2].Parent = rightSan // 右儿子的每一个孙子. Parent 都要重新指向
 		}
 	}
-	rightSan.Key[(globalconst.M+1)/2-2] = keyTail         // 补充尾巴，例如9号
-	rightSan.Payload[(globalconst.M+1)/2-2] = payloadTail // 补充尾巴，例如9号
-	rightSan.Child[(globalconst.M+1)/2-1] = childTail     // 补充尾巴，例如9号的右腿
-	if rightSan.Child[(globalconst.M+1)/2-1] != nil {
-		rightSan.Child[(globalconst.M+1)/2-1].Parent = rightSan // 右儿子的每一个孙子. Parent 都要重新指向
+	rightSan.Key[(btreeconst.M+1)/2-2] = keyTail         // 补充尾巴，例如9号
+	rightSan.Payload[(btreeconst.M+1)/2-2] = payloadTail // 补充尾巴，例如9号
+	rightSan.Child[(btreeconst.M+1)/2-1] = childTail     // 补充尾巴，例如9号的右腿
+	if rightSan.Child[(btreeconst.M+1)/2-1] != nil {
+		rightSan.Child[(btreeconst.M+1)/2-1].Parent = rightSan // 右儿子的每一个孙子. Parent 都要重新指向
 	}
-	rightSan.KeyNum = (globalconst.M+1)/2 - 1 // 右儿子key数，自己算，保证是这个
+	rightSan.KeyNum = (btreeconst.M+1)/2 - 1 // 右儿子key数，自己算，保证是这个
 
 	// n 其实是左儿子 leftSan。擦除掉(已经升上去+分到右儿子)的数据
-	for j := globalconst.M / 2; j < globalconst.M-1; j++ { // 例如①M=10，循环5~8；M=9，循环4~7；M=5，循环3~3
+	for j := btreeconst.M / 2; j < btreeconst.M-1; j++ { // 例如①M=10，循环5~8；M=9，循环4~7；M=5，循环3~3
 		n.Key[j] = 0       // 第一个是0，最后一个是(M+1)/2-2
 		n.Payload[j] = ""  // 第一个是0，最后一个是(M+1)/2-2
 		n.Child[j+1] = nil // 第一个是1，补每个Key右边的孙子
 	}
-	n.KeyNum = globalconst.M / 2 // 左儿子key数量。例如①M=10，循环5~9，左边保留0~4，长度5；M=9，循环4~8，左边保留0~3，长度4
+	n.KeyNum = btreeconst.M / 2 // 左儿子key数量。例如①M=10，循环5~9，左边保留0~4，长度5；M=9，循环4~8，左边保留0~3，长度4
 
 	// 这里只是把中间节点升起来，拟插入下一级，带着两条腿，进入下一层递归。（如果本节点是root，升起来的就是新root就结束）
 	if n.Parent == nil { // 说明是root升起来的

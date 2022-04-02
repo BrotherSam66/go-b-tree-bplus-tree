@@ -6,7 +6,8 @@
 package main
 
 import (
-	"go-b-tree-bplus-tree/btreeutils"
+	"go-b-tree-bplus-tree/bplustree"
+	"go-b-tree-bplus-tree/btree"
 
 	"math/rand"
 	"time"
@@ -14,5 +15,6 @@ import (
 
 func main() {
 	rand.Seed(time.Now().Unix())
-	btreeutils.BtreeDemo()
+	bplustree.BPlusTreeDemo()
+	btree.BTreeDemo()
 }

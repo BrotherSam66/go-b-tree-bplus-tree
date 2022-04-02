@@ -1,16 +1,15 @@
-// Package btreeutils
+// Package btree
 // @Title B树工具包
 // @Description  和插入节点有关的操作
 // @Author  https://github.com/BrotherSam66/
 // @Update
-package btreeutils
+package btree
 
 import (
 	"fmt"
-	"go-b-tree-bplus-tree/btreemodels"
-	"go-b-tree-bplus-tree/global"
-	"go-b-tree-bplus-tree/globalconst"
-
+	"go-b-tree-bplus-tree/btree/btreeconst"
+	"go-b-tree-bplus-tree/btree/btreeglobal"
+	"go-b-tree-bplus-tree/btree/btreemodels"
 	"math/rand"
 )
 
@@ -27,7 +26,7 @@ func Inputs() {
 			return
 		}
 		if key == 0 {
-			key = rand.Intn(global.MaxKey)
+			key = rand.Intn(btreeglobal.MaxKey)
 			fmt.Println(key)
 		}
 		if key > 1000 {
@@ -40,7 +39,7 @@ func Inputs() {
 				Insert(i, "")
 			}
 
-			ShowTree(global.Root)
+			ShowTree(btreeglobal.Root)
 			continue
 		}
 		if key > 99 || key < 1 {
@@ -48,7 +47,7 @@ func Inputs() {
 			continue
 		}
 		Insert(key, "")
-		ShowTree(global.Root)
+		ShowTree(btreeglobal.Root)
 	}
 }
 
@@ -60,8 +59,8 @@ func Insert(key int, payload string) {
 	if payload == "" {
 		payload = fmt.Sprintf("%d", key)
 	}
-	if global.Root == nil { // 原树为空树，新加入的转为根
-		global.Root = btreemodels.NewBTreeNode(nil, 1, key, payload)
+	if btreeglobal.Root == nil { // 原树为空树，新加入的转为根
+		btreeglobal.Root = btreemodels.NewBTreeNode(nil, 1, key, payload)
 		return
 	}
 
@@ -109,7 +108,7 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
 	// 强行插入，无论是否满员，溢出的在Tail里
 	keyTail, payloadTail, childTail, _ := InsertOneKey(n, insertNode, keyPoint)
 	// 分析本节点是否需要裂变
-	if n.KeyNum < globalconst.M-1 { // 被插入节点不满员，不用递归
+	if n.KeyNum < btreeconst.M-1 { // 被插入节点不满员，不用递归
 		n.KeyNum++
 		return
 	}
@@ -120,8 +119,8 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
 
 	// 这里只是把中间节点升起来，拟插入下一级，带着两条腿，进入下一层递归。（如果本节点是root，升起来的就是新root就结束）
 	if isUpRoot { // 说明升起来的是单root
-		n.Parent = upNode    // 左儿子重新认爹
-		global.Root = upNode // 重新指定根节点n.Parent = {*go-b-tree-bplus-tree/btreemodels.BTreeNode | 0xc000120500}
+		n.Parent = upNode         // 左儿子重新认爹
+		btreeglobal.Root = upNode // 重新指定根节点n.Parent = {*go-b-tree-bplus-tree/btreemodels.BTreeNode | 0xc000120500}
 		return
 	} else { // 不是root升起来的。递归...
 		tempNode := n.Parent              // 原来被插入的节点的爹作为新的被插入的节点，拿来递归的
@@ -155,14 +154,14 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
  *(?9)是(65)原归属节点右半部分，是新分裂出来的。
  */
 func InsertOneKey(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode, insertPoint int) (keyTail int, payloadTail string, childTail *btreemodels.BTreeNode, err error) {
-	keyTail = n.Key[globalconst.M-2]         // 数组最后一个元素
-	payloadTail = n.Payload[globalconst.M-2] // 数组最后一个元素
-	childTail = n.Child[globalconst.M-1]     // 数组最后一个元素
+	keyTail = n.Key[btreeconst.M-2]         // 数组最后一个元素
+	payloadTail = n.Payload[btreeconst.M-2] // 数组最后一个元素
+	childTail = n.Child[btreeconst.M-1]     // 数组最后一个元素
 
 	// 把往后挤走的KEY处理完
-	// 例如 globalconst.M-1=9最大9个key；n.KeyNum=6目前6个key；①keyPoint=3表示拟插入要在3这个位置，②keyPoint=6表示拟插入最大
+	// 例如 btreeconst.M-1=9最大9个key；n.KeyNum=6目前6个key；①keyPoint=3表示拟插入要在3这个位置，②keyPoint=6表示拟插入最大
 	//for j := n.KeyNum; j > insertPoint; j-- { // 例如①KeyNum=4，insertPoint=0，j=3~1；②KeyNum=4，insertPoint=1，j=3~2
-	for j := globalconst.M - 2; j > insertPoint; j-- { // 咬死从数组最后一个元素倒其，可能浪费些算力
+	for j := btreeconst.M - 2; j > insertPoint; j-- { // 咬死从数组最后一个元素倒其，可能浪费些算力
 		n.Key[j] = n.Key[j-1]
 		n.Payload[j] = n.Payload[j-1]
 		n.Child[j+1] = n.Child[j] // 搬移的是每个Key的右腿
@@ -170,7 +169,7 @@ func InsertOneKey(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode, i
 
 	// 把拟插入节点放进来
 	// 升上来的节点(不会凭空上来，有一条腿是要替换原来的父节点的，我们指定共享左腿，但是插入0位指定共享右腿)。下面有一句是废话
-	if insertPoint > globalconst.M-2 { // 插入的是在溢出的尾巴，实际上插入的才是溢出
+	if insertPoint > btreeconst.M-2 { // 插入的是在溢出的尾巴，实际上插入的才是溢出
 		keyTail = insertNode.Key[0]         // 溢出的key
 		payloadTail = insertNode.Payload[0] // 数组最后一个元素
 		childTail = insertNode.Child[1]     // 溢出的右腿。（左腿insertNode上来前已经确保和n的最右腿取值一样了）
