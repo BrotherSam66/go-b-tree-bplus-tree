@@ -44,6 +44,19 @@ func NewBPTreeNode(parent *BPTreeNode, key int, leaf *BPTreeLeaf) *BPTreeNode {
 	}
 }
 
+// NewBlankBPTreeNode 构造函数
+// @parent 指向父亲的指针
+// @key 本节点第一个KEY的值
+// @payload 本节点的载荷（用来承载节点的信息）
+// @Author https://github.com/BrotherSam66/
+func NewBlankBPTreeNode() *BPTreeNode {
+	return &BPTreeNode{
+		Parent: parent,
+		Key:    []int{key},
+		Leaf:   []*BPTreeLeaf{leaf},
+	}
+}
+
 // NewBPTreeLeaf 构造函数
 // @parent 指向父亲的指针
 // @key 本节点第一个KEY的值

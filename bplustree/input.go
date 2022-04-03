@@ -65,7 +65,7 @@ func Insert(key int, payload string) {
 		[2]完美找到叶子，==》修改叶子payload
 		[3]找到应该插入的末级分支。==》创建叶子==》末级分支插入key。
 		[3.1]若被插入关键字所在的结点，其含有关键字数目等于阶数 M，则需要将该结点分裂为两个结点，
-			左结点包含⌈M/2⌉。将⌈M/2⌉的关键字上移至其双亲结点。
+			左结点包含⌈Min⌉。将⌈Min⌉的关键字上移至其双亲结点。
 			假设其双亲结点中包含的关键字个数小于 M，则插入操作完成。。
 			==》否则用父亲节点递归[3.1]，直到root
 		如果插入的关键字比当前结点中的最大值还大，破坏了B+树中从根结点到当前结点的所有索引值，此时需要及时修正后，再做其他操作。
@@ -156,7 +156,7 @@ func InsertOneNode(insertNode *bplustreemodels.BPTreeNode) (err error) {
 		// 新建分支，Key是我的老大+原root的老大，下级是我和原root
 		newRoot := &bplustreemodels.BPTreeNode{}
 		oldRoot := bplustreeglobal.Root
-		newRoot.Key = []int{insertNode.Key[len(insertNode.Key)], oldRoot.Key[len(oldRoot.Key)]}
+		newRoot.Key = []int{insertNode.Key[len(insertNode.Key)-1], oldRoot.Key[len(oldRoot.Key)-1]}
 		newRoot.Child = []*bplustreemodels.BPTreeNode{insertNode, oldRoot}
 		// root指向新分支
 		bplustreeglobal.Root = newRoot
@@ -197,7 +197,7 @@ func InsertOneNode(insertNode *bplustreemodels.BPTreeNode) (err error) {
 
 // SplitTo2Node >M，满员了，左右分裂，
 func SplitTo2Node(n *bplustreemodels.BPTreeNode) (retNode *bplustreemodels.BPTreeNode, err error) {
-	// 左边包含M/2位置的元素，然后用这个元素向上插入
+	// 左边包含Min位置的元素，然后用这个元素向上插入
 	if n.Parent == nil { // 说明是root在分裂
 		// todo ？？？？
 	}
@@ -205,27 +205,27 @@ func SplitTo2Node(n *bplustreemodels.BPTreeNode) (retNode *bplustreemodels.BPTre
 	// 左边是新创建节点
 	newLeftNode := &bplustreemodels.BPTreeNode{}
 	newLeftNode.Parent = n.Parent // 父亲的指向
-	newLeftNode.Key = n.Key[:bplustreeglobal.M/2]
+	newLeftNode.Key = n.Key[:bplustreeglobal.Min]
 
-	// 右边搬家过来M/2
+	// 右边搬家过来Min
 	if len(n.Leaf) > 0 { // 是末级级分支，带的是叶子
-		newLeftNode.Leaf = n.Leaf[:bplustreeglobal.M/2] // 一组指向叶子的
-		for i := 0; i < bplustreeglobal.M/2+1; i++ {
+		newLeftNode.Leaf = n.Leaf[:bplustreeglobal.Min] // 一组指向叶子的
+		for i := 0; i < bplustreeglobal.Min+1; i++ {
 			n.Leaf[i].Parent = newLeftNode // 一组叶子的父级上联
 		}
 	} else { // 非末级级分支，带的是分支
-		newLeftNode.Child = n.Child[:bplustreeglobal.M/2] // 一组指向下级分支的
-		for i := 0; i < bplustreeglobal.M/2+1; i++ {
+		newLeftNode.Child = n.Child[:bplustreeglobal.Min] // 一组指向下级分支的
+		for i := 0; i < bplustreeglobal.Min+1; i++ {
 			n.Child[i].Parent = newLeftNode // 一组下级分支的父级上联
 		}
 	}
 
-	// 旧节点裁掉左边M/2
-	n.Key = n.Key[bplustreeglobal.M/2:]
+	// 旧节点裁掉左边Min
+	n.Key = n.Key[bplustreeglobal.Min:]
 	if len(n.Leaf) > 0 { // 是末级级分支，带的是叶子
-		n.Leaf = n.Leaf[bplustreeglobal.M/2:] // 一组指向叶子的
+		n.Leaf = n.Leaf[bplustreeglobal.Min:] // 一组指向叶子的
 	} else { // 非末级级分支，带的是分支
-		n.Child = n.Child[bplustreeglobal.M/2:] // 一组指向下级分支的
+		n.Child = n.Child[bplustreeglobal.Min:] // 一组指向下级分支的
 	}
 
 	retNode = newLeftNode
