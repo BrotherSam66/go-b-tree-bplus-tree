@@ -93,12 +93,12 @@ func Insert(key int, payload string) {
 // @author https://github.com/BrotherSam66/
 func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) (err error) {
 	// 寻找插入的位置，拟插入放在这个点前面
-	keyPoint := 0
-	for keyPoint = 0; keyPoint < n.KeyNum; keyPoint++ {
-		if insertNode.Key[0] == n.Key[keyPoint] { // 准确命中，只可能是新创建节点
+	keyPosition := 0
+	for keyPosition = 0; keyPosition < n.KeyNum; keyPosition++ {
+		if insertNode.Key[0] == n.Key[keyPosition] { // 准确命中，只可能是新创建节点
 			n.Payload = insertNode.Payload
 			return
-		} else if insertNode.Key[0] < n.Key[keyPoint] { // 说明已经找过头了,结束本节点循环，key插在i前面
+		} else if insertNode.Key[0] < n.Key[keyPosition] { // 说明已经找过头了,结束本节点循环，key插在i前面
 			break
 		}
 		// 到这里：可能①会向后找；可能②KeyNum循环结束，得到的i是最右key的右边，拟插入key本组最大。
@@ -106,7 +106,7 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
 
 	// 到这里：i表示了拟插入key的位置。insertNode可能是不带孩子的新创建节点，也可能是下层挤上来的带2个孩子的节点(不会凭空上来，有一条腿是要替换原来的父节点的，我们指定用左腿)
 	// 强行插入，无论是否满员，溢出的在Tail里
-	keyTail, payloadTail, childTail, _ := InsertOneKey(n, insertNode, keyPoint)
+	keyTail, payloadTail, childTail, _ := InsertOneKey(n, insertNode, keyPosition)
 	// 分析本节点是否需要裂变
 	if n.KeyNum < btreeconst.M-1 { // 被插入节点不满员，不用递归
 		n.KeyNum++
@@ -136,7 +136,7 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
 // InsertOneKey 插入一个Key，满了也插，溢出在Tail里
 // @n 被插入节点
 // @insertNode 拟插入节点
-// @insertPoint 拟插入位置，新入的占用这个位置
+// @insertPosition 拟插入位置，新入的占用这个位置
 // @keyTail 准备承载Key数组最后一个元素
 // @ChildTail  准备承载Child数组最后一个元素
 // @payloadTail 准备承载payload数组最后一个元素
@@ -153,15 +153,15 @@ func InsertOneNode(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode) 
  *(?8)是(65)原归属节点左半部分，原来就和60|70指针勾连，
  *(?9)是(65)原归属节点右半部分，是新分裂出来的。
  */
-func InsertOneKey(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode, insertPoint int) (keyTail int, payloadTail string, childTail *btreemodels.BTreeNode, err error) {
+func InsertOneKey(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode, insertPosition int) (keyTail int, payloadTail string, childTail *btreemodels.BTreeNode, err error) {
 	keyTail = n.Key[btreeconst.M-2]         // 数组最后一个元素
 	payloadTail = n.Payload[btreeconst.M-2] // 数组最后一个元素
 	childTail = n.Child[btreeconst.M-1]     // 数组最后一个元素
 
 	// 把往后挤走的KEY处理完
-	// 例如 btreeconst.M-1=9最大9个key；n.KeyNum=6目前6个key；①keyPoint=3表示拟插入要在3这个位置，②keyPoint=6表示拟插入最大
-	//for j := n.KeyNum; j > insertPoint; j-- { // 例如①KeyNum=4，insertPoint=0，j=3~1；②KeyNum=4，insertPoint=1，j=3~2
-	for j := btreeconst.M - 2; j > insertPoint; j-- { // 咬死从数组最后一个元素倒其，可能浪费些算力
+	// 例如 btreeconst.M-1=9最大9个key；n.KeyNum=6目前6个key；①keyPosition=3表示拟插入要在3这个位置，②keyPosition=6表示拟插入最大
+	//for j := n.KeyNum; j > insertPosition; j-- { // 例如①KeyNum=4，insertPosition=0，j=3~1；②KeyNum=4，insertPosition=1，j=3~2
+	for j := btreeconst.M - 2; j > insertPosition; j-- { // 咬死从数组最后一个元素倒其，可能浪费些算力
 		n.Key[j] = n.Key[j-1]
 		n.Payload[j] = n.Payload[j-1]
 		n.Child[j+1] = n.Child[j] // 搬移的是每个Key的右腿
@@ -169,16 +169,16 @@ func InsertOneKey(n *btreemodels.BTreeNode, insertNode *btreemodels.BTreeNode, i
 
 	// 把拟插入节点放进来
 	// 升上来的节点(不会凭空上来，有一条腿是要替换原来的父节点的，我们指定共享左腿，但是插入0位指定共享右腿)。下面有一句是废话
-	if insertPoint > btreeconst.M-2 { // 插入的是在溢出的尾巴，实际上插入的才是溢出
+	if insertPosition > btreeconst.M-2 { // 插入的是在溢出的尾巴，实际上插入的才是溢出
 		keyTail = insertNode.Key[0]         // 溢出的key
 		payloadTail = insertNode.Payload[0] // 数组最后一个元素
 		childTail = insertNode.Child[1]     // 溢出的右腿。（左腿insertNode上来前已经确保和n的最右腿取值一样了）
 	} else { // 插入的不是在尾巴，真实插入
-		n.Key[insertPoint] = insertNode.Key[0]
-		n.Payload[insertPoint] = insertNode.Payload[0]
-		n.Child[insertPoint+1] = insertNode.Child[1] // 右腿
+		n.Key[insertPosition] = insertNode.Key[0]
+		n.Payload[insertPosition] = insertNode.Payload[0]
+		n.Child[insertPosition+1] = insertNode.Child[1] // 右腿
 		// todo 还要考虑插入的左右腿
-		if insertPoint == 0 {
+		if insertPosition == 0 {
 			n.Child[0] = insertNode.Child[0] // 左腿
 		}
 	}

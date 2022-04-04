@@ -57,14 +57,14 @@ func Delete(key int) {
 	}
 
 	// 非叶子，查找可替换的叶子节点的KEY值，交换。前序or后继均可，优先前序，前序节点数量<=btreeconst.Min不容易删除就定死用后继
-	// 查到key在tempNode准确位置，deletePoint
-	deletePoint := 0
-	for deletePoint = 0; deletePoint < tempNode.KeyNum; deletePoint++ {
-		if tempNode.Key[deletePoint] == key { // 准确命中，只可能是新创建节点情形
+	// 查到key在tempNode准确位置，deletePosition
+	deletePosition := 0
+	for deletePosition = 0; deletePosition < tempNode.KeyNum; deletePosition++ {
+		if tempNode.Key[deletePosition] == key { // 准确命中，只可能是新创建节点情形
 			break
 		}
 	}
-	if deletePoint >= tempNode.KeyNum {
+	if deletePosition >= tempNode.KeyNum {
 		fmt.Println("发生某种错误，找到KEY又不存在了！ ")
 		return
 	}
@@ -75,20 +75,20 @@ func Delete(key int) {
 		if avatarNode.KeyNum <= btreeconst.Min { // 不能简易删除
 			avatarNode, _ = PredecessorOrSuccessor(tempNode, key, false) // 用后继节点做替身
 			// 删除数据 对换 后继（一个神奇的语句）
-			tempNode.Key[deletePoint], avatarNode.Key[0] = avatarNode.Key[0], tempNode.Key[deletePoint]
-			tempNode.Payload[deletePoint], avatarNode.Payload[0] = avatarNode.Payload[0], tempNode.Payload[deletePoint]
-			deletePoint = 0
+			tempNode.Key[deletePosition], avatarNode.Key[0] = avatarNode.Key[0], tempNode.Key[deletePosition]
+			tempNode.Payload[deletePosition], avatarNode.Payload[0] = avatarNode.Payload[0], tempNode.Payload[deletePosition]
+			deletePosition = 0
 		} else {
 			// 删除数据 对换 前驱（一个神奇的语句）
-			tempNode.Key[deletePoint], avatarNode.Key[avatarNode.KeyNum-1] = avatarNode.Key[avatarNode.KeyNum-1], tempNode.Key[deletePoint]
-			tempNode.Payload[deletePoint], avatarNode.Payload[avatarNode.KeyNum-1] = avatarNode.Payload[avatarNode.KeyNum-1], tempNode.Payload[deletePoint]
-			deletePoint = avatarNode.KeyNum - 1
+			tempNode.Key[deletePosition], avatarNode.Key[avatarNode.KeyNum-1] = avatarNode.Key[avatarNode.KeyNum-1], tempNode.Key[deletePosition]
+			tempNode.Payload[deletePosition], avatarNode.Payload[avatarNode.KeyNum-1] = avatarNode.Payload[avatarNode.KeyNum-1], tempNode.Payload[deletePosition]
+			deletePosition = avatarNode.KeyNum - 1
 		}
 	}
 
 	// 到这里，KEY在叶子上，就开始删除的递归流程
 
-	_ = DeleteOneKey(avatarNode, key, deletePoint)
+	_ = DeleteOneKey(avatarNode, key, deletePosition)
 
 	return
 }
@@ -96,17 +96,17 @@ func Delete(key int) {
 // DeleteOneKey 删除一个叶子上的KEY，可能要递归
 // @avatar 节点
 // @key 拟删除键值
-// @deletePoint 拟删除键值的位置
+// @deletePosition 拟删除键值的位置
 // @author https://github.com/BrotherSam66/
-func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePoint int) (err error) {
-	if avatar.Key[deletePoint] != key {
-		err = errors.New("奇怪啊，指定的位置deletePoint键值不吻合啊")
-		fmt.Println("奇怪啊，指定的位置deletePoint键值不吻合啊")
+func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePosition int) (err error) {
+	if avatar.Key[deletePosition] != key {
+		err = errors.New("奇怪啊，指定的位置deletePosition键值不吻合啊")
+		fmt.Println("奇怪啊，指定的位置deletePosition键值不吻合啊")
 		return
 	}
 
 	// 删除掉这个key
-	_ = MoveKeysLeft(avatar, deletePoint, -1, 0, "", nil)
+	_ = MoveKeysLeft(avatar, deletePosition, -1, 0, "", nil)
 
 	// 检查合法性，可能要递归
 	if avatar.KeyNum < btreeconst.Min && avatar.Parent != nil { // avatar节点过短 && 不是root，需要调整，可能递归
@@ -122,33 +122,33 @@ func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePoint int) (err 
 
 // EraseKeys 抹除部分KEY，必须是右侧的 todo 主要是分裂的时候用
 // @n 节点
-// @leftPoint 左面端点
-// @rightPoint 右面端点，-1表示最右
+// @leftPosition 左面端点
+// @rightPosition 右面端点，-1表示最右
 // @author https://github.com/BrotherSam66/
-func EraseKeys(n *btreemodels.BTreeNode, leftPoint int, rightPoint int) (err error) {
+func EraseKeys(n *btreemodels.BTreeNode, leftPosition int, rightPosition int) (err error) {
 	if n == nil {
 		err = errors.New("出错，n是nil！")
 		fmt.Println(err.Error())
 		return
 	}
-	if leftPoint <= 0 {
-		err = errors.New("出错，leftPoint必须是>0！")
+	if leftPosition <= 0 {
+		err = errors.New("出错，leftPosition必须是>0！")
 		fmt.Println(err.Error())
 		return
 	}
-	if rightPoint < leftPoint {
-		err = errors.New("出错，rightPoint < leftPoint")
+	if rightPosition < leftPosition {
+		err = errors.New("出错，rightPosition < leftPosition")
 		fmt.Println(err.Error())
 		return
 	}
 
-	for i := leftPoint; i <= rightPoint; i++ {
+	for i := leftPosition; i <= rightPosition; i++ {
 		n.Key[i] = 0
 		n.Payload[i] = ""
 		n.Child[i+1] = nil
 	}
 
-	n.KeyNum = n.KeyNum - 1 - rightPoint + leftPoint
+	n.KeyNum = n.KeyNum - 1 - rightPosition + leftPosition
 	return
 }
 
@@ -172,34 +172,34 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 	rightBrother := avatar // 临时定义
 	parent := avatar.Parent
 	// 找到 avatar 在父亲的排位
-	avatarPoint := 0
-	for avatarPoint = 0; avatarPoint < parent.KeyNum; avatarPoint++ {
-		if avatar.Key[0] < parent.Key[avatarPoint] { // 小于，说明刚刚越过了，(用avatar任何Key都行)
+	avatarPosition := 0
+	for avatarPosition = 0; avatarPosition < parent.KeyNum; avatarPosition++ {
+		if avatar.Key[0] < parent.Key[avatarPosition] { // 小于，说明刚刚越过了，(用avatar任何Key都行)
 			break
 		}
 	}
 
 	// 找到兄弟后直接借KEY
 	isSuccess := false
-	if avatarPoint == 0 { // 在最左
+	if avatarPosition == 0 { // 在最左
 		rightBrother = parent.Child[1]
 		isSuccess, _ = TryBorrowBrotherKey(rightBrother, false)
 		if isSuccess {
 			return
 		}
-	} else if avatarPoint >= parent.KeyNum { // 在最右
-		leftBrother = parent.Child[avatarPoint-1]
+	} else if avatarPosition >= parent.KeyNum { // 在最右
+		leftBrother = parent.Child[avatarPosition-1]
 		isSuccess, _ = TryBorrowBrotherKey(leftBrother, true)
 		if isSuccess {
 			return
 		}
 	} else { // 居中，有左右2个兄弟
-		rightBrother = parent.Child[avatarPoint+1]
+		rightBrother = parent.Child[avatarPosition+1]
 		isSuccess, _ = TryBorrowBrotherKey(rightBrother, false)
 		if isSuccess {
 			return
 		}
-		leftBrother = parent.Child[avatarPoint-1]
+		leftBrother = parent.Child[avatarPosition-1]
 		isSuccess, _ = TryBorrowBrotherKey(leftBrother, true)
 		if isSuccess {
 			return
@@ -216,12 +216,12 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 	 *
 	 *向父亲借(60)形成(30|40|60|70)，父亲指向20的右腿，(20)去递归
 	 */
-	if avatarPoint == 0 { // 在最左,只能用右兄弟
+	if avatarPosition == 0 { // 在最左,只能用右兄弟
 		rightBrother = parent.Child[1]
-		_ = Merge3Nodes(avatar, parent, rightBrother, avatarPoint) // 三个节点合并
+		_ = Merge3Nodes(avatar, parent, rightBrother, avatarPosition) // 三个节点合并
 	} else { // 优先用左兄弟
-		leftBrother = parent.Child[avatarPoint-1]
-		_ = Merge3Nodes(leftBrother, parent, avatar, avatarPoint-1) // 三个节点合并
+		leftBrother = parent.Child[avatarPosition-1]
+		_ = Merge3Nodes(leftBrother, parent, avatar, avatarPosition-1) // 三个节点合并
 	}
 	if parent.KeyNum == 0 && parent.Parent == nil {
 		btreeglobal.Root = avatar

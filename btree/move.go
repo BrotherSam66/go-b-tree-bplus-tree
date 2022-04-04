@@ -9,31 +9,31 @@ import (
 
 // MoveKeysLeft 叶子的KEY，排队左移
 // @n 节点
-// @leftPoint 左面端点
-// @rightPoint 右面端点，-1表示最右
+// @leftPosition 左面端点
+// @rightPosition 右面端点，-1表示最右
 // @tailKey 尾部准备补进来键值
 // @tailPayLoad 尾部准备补进来载荷
 // @tailChild 尾部准备补进来孩子
 // @author https://github.com/BrotherSam66/
-func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, tailKey int, tailPayLoad string, tailChild *btreemodels.BTreeNode) (err error) {
-	if rightPoint == -1 {
-		rightPoint = n.KeyNum - 1
+func MoveKeysLeft(n *btreemodels.BTreeNode, leftPosition int, rightPosition int, tailKey int, tailPayLoad string, tailChild *btreemodels.BTreeNode) (err error) {
+	if rightPosition == -1 {
+		rightPosition = n.KeyNum - 1
 	}
-	endPoint := rightPoint            // 循环结束位
-	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
-		endPoint--
+	endPosition := rightPosition         // 循环结束位
+	if rightPosition == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+		endPosition--
 	}
-	for i := leftPoint; i <= endPoint; i++ { // 逐个左移
+	for i := leftPosition; i <= endPosition; i++ { // 逐个左移
 		n.Key[i] = n.Key[i+1]
 		n.Payload[i] = n.Payload[i+1]
 		n.Child[i] = n.Child[i+1]
 	}
-	n.Child[endPoint] = n.Child[endPoint+1] // 右腿，补一下
+	n.Child[endPosition] = n.Child[endPosition+1] // 右腿，补一下
 
-	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
-		n.Key[rightPoint] = tailKey
-		n.Payload[rightPoint] = tailPayLoad
-		n.Child[rightPoint+1] = tailChild // 只补右腿，左腿前面处理好了
+	if rightPosition == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+		n.Key[rightPosition] = tailKey
+		n.Payload[rightPosition] = tailPayLoad
+		n.Child[rightPosition+1] = tailChild // 只补右腿，左腿前面处理好了
 	}
 	if tailChild == nil { // 没有补充的尾巴，key数量就少1
 		n.KeyNum--
@@ -43,30 +43,30 @@ func MoveKeysLeft(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, tailK
 
 // MoveKeysLeftWithoutLeftChild 叶子的KEY，排队左移,最左腿不动
 // @n 节点
-// @leftPoint 左面端点
-// @rightPoint 右面端点，-1表示最右
+// @leftPosition 左面端点
+// @rightPosition 右面端点，-1表示最右
 // @tailKey 尾部准备补进来键值
 // @tailPayLoad 尾部准备补进来载荷
 // @tailChild 尾部准备补进来孩子
 // @author https://github.com/BrotherSam66/
-func MoveKeysLeftWithoutLeftChild(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, tailKey int, tailPayLoad string, tailChild *btreemodels.BTreeNode) (err error) {
-	if rightPoint == -1 {
-		rightPoint = n.KeyNum - 1
+func MoveKeysLeftWithoutLeftChild(n *btreemodels.BTreeNode, leftPosition int, rightPosition int, tailKey int, tailPayLoad string, tailChild *btreemodels.BTreeNode) (err error) {
+	if rightPosition == -1 {
+		rightPosition = n.KeyNum - 1
 	}
-	endPoint := rightPoint            // 循环结束位
-	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
-		endPoint--
+	endPosition := rightPosition         // 循环结束位
+	if rightPosition == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+		endPosition--
 	}
-	for i := leftPoint; i <= endPoint; i++ { // 逐个左移
+	for i := leftPosition; i <= endPosition; i++ { // 逐个左移
 		n.Key[i] = n.Key[i+1]
 		n.Payload[i] = n.Payload[i+1]
 		n.Child[i+1] = n.Child[i+2]
 	}
 
-	if rightPoint == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
-		n.Key[rightPoint] = tailKey
-		n.Payload[rightPoint] = tailPayLoad
-		n.Child[rightPoint+1] = tailChild // 只补右腿，左腿前面处理好了
+	if rightPosition == btreeconst.M-2 { // 说明满员，且从尾巴移动，需要少循环1位并补尾巴
+		n.Key[rightPosition] = tailKey
+		n.Payload[rightPosition] = tailPayLoad
+		n.Child[rightPosition+1] = tailChild // 只补右腿，左腿前面处理好了
 	}
 	if tailChild == nil { // 没有补充的尾巴，key数量就少1
 		n.KeyNum--
@@ -76,21 +76,21 @@ func MoveKeysLeftWithoutLeftChild(n *btreemodels.BTreeNode, leftPoint int, right
 
 // MoveKeysRight 叶子的KEY，排队右移
 // @n 节点
-// @leftPoint 左面端点
-// @rightPoint 右面端点，-1表示最右
+// @leftPosition 左面端点
+// @rightPosition 右面端点，-1表示最右
 // @headKey 头部准备补进来键值
 // @headPayLoad 头部准备补进来载荷
 // @headChild 头部准备补进来孩子
 // @author https://github.com/BrotherSam66/
-func MoveKeysRight(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, headKey int, headPayLoad string, headChild *btreemodels.BTreeNode) (err error) {
+func MoveKeysRight(n *btreemodels.BTreeNode, leftPosition int, rightPosition int, headKey int, headPayLoad string, headChild *btreemodels.BTreeNode) (err error) {
 	// 只解决不满的，在最左侧加一个的
-	if leftPoint != 0 {
-		err = errors.New("出错，leftPoint必须是0！")
+	if leftPosition != 0 {
+		err = errors.New("出错，leftPosition必须是0！")
 		fmt.Println(err.Error())
 		return
 	}
-	if rightPoint != -1 {
-		err = errors.New("出错，rightPoint必须是-1！")
+	if rightPosition != -1 {
+		err = errors.New("出错，rightPosition必须是-1！")
 		fmt.Println(err.Error())
 		return
 	}
@@ -119,9 +119,9 @@ func MoveKeysRight(n *btreemodels.BTreeNode, leftPoint int, rightPoint int, head
 // @leftSan 准备接收合并的节点
 // @parent 父节点，只下来一个Key
 // @rightSan 准备被合并的节点
-// @avatarPoint 父节点下来Key的位置
+// @avatarPosition 父节点下来Key的位置
 // @author https://github.com/BrotherSam66/
-func Merge3Nodes(leftSan *btreemodels.BTreeNode, parent *btreemodels.BTreeNode, rightSan *btreemodels.BTreeNode, avatarPoint int) (err error) {
+func Merge3Nodes(leftSan *btreemodels.BTreeNode, parent *btreemodels.BTreeNode, rightSan *btreemodels.BTreeNode, avatarPosition int) (err error) {
 	if leftSan.KeyNum+1+rightSan.KeyNum > btreeconst.M-1 {
 		err = errors.New("三个节点Key叠加起来溢出！")
 		fmt.Println(err.Error())
@@ -138,12 +138,12 @@ func Merge3Nodes(leftSan *btreemodels.BTreeNode, parent *btreemodels.BTreeNode, 
 		}
 	}
 	// parent 那个key的数据，复制到leftSan(不用带腿)，leftSan.KeyNum++
-	leftSan.Key[leftSan.KeyNum] = parent.Key[avatarPoint]
-	leftSan.Payload[leftSan.KeyNum] = parent.Payload[avatarPoint]
+	leftSan.Key[leftSan.KeyNum] = parent.Key[avatarPosition]
+	leftSan.Payload[leftSan.KeyNum] = parent.Payload[avatarPosition]
 	leftSan.KeyNum++
 
 	// parent 那个key的数据，删除，保留左腿，后面向左排挤1位，
-	_ = MoveKeysLeftWithoutLeftChild(parent, avatarPoint, -1, 0, "", nil)
+	_ = MoveKeysLeftWithoutLeftChild(parent, avatarPosition, -1, 0, "", nil)
 
 	// rightSan 所有key的数据，复制到leftSan(多一条最左腿补充parent没带下来的)，leftSan.KeyNUM+=rightSan.KeyNUM，
 	_ = Merge2Nodes(leftSan, rightSan)

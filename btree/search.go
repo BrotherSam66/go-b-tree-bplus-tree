@@ -56,22 +56,22 @@ func PredecessorOrSuccessor(tempNode *btreemodels.BTreeNode, key int, isPredeces
 		return
 	}
 
-	// 精准找到拟删除KEY的位置，deletePoint
-	deletePoint := 0
-	for deletePoint = 0; deletePoint < tempNode.KeyNum; deletePoint++ {
-		if tempNode.Key[deletePoint] == key { // 准确命中，只可能是新创建节点情形
+	// 精准找到拟删除KEY的位置，deletePosition
+	deletePosition := 0
+	for deletePosition = 0; deletePosition < tempNode.KeyNum; deletePosition++ {
+		if tempNode.Key[deletePosition] == key { // 准确命中，只可能是新创建节点情形
 			break
 		}
 	}
-	if deletePoint >= tempNode.KeyNum {
+	if deletePosition >= tempNode.KeyNum {
 		fmt.Println("发生某种错误，找到KEY又不存在了！ ")
 		return
 	}
 
 	if isPredecessor { // 前驱
-		avatar = tempNode.Child[deletePoint] // 命中点左边的腿
+		avatar = tempNode.Child[deletePosition] // 命中点左边的腿
 	} else { // 后继
-		avatar = tempNode.Child[deletePoint+1] // 命中点右边的腿
+		avatar = tempNode.Child[deletePosition+1] // 命中点右边的腿
 	}
 
 	for { // 递归循环
