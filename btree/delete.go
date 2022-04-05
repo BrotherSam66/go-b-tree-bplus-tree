@@ -94,7 +94,7 @@ func Delete(key int) {
 }
 
 // DeleteOneKey 删除一个叶子上的KEY，可能要递归
-// @avatar 节点
+// @avatar 准备删除一个Key的节点
 // @key 拟删除键值
 // @deletePosition 拟删除键值的位置
 // @author https://github.com/BrotherSam66/
@@ -113,7 +113,7 @@ func DeleteOneKey(avatar *btreemodels.BTreeNode, key int, deletePosition int) (e
 		_ = FixAfterDelete(avatar)
 	}
 
-	if avatar.KeyNum == 0 && avatar.Parent == nil { // avatar节点过短 && 不是root，需要调整，可能递归
+	if avatar.KeyNum == 0 && avatar.Parent == nil { // avatar节点删除空了 + 是root。root清空
 		btreeglobal.Root = nil
 	}
 
@@ -223,6 +223,7 @@ func FixAfterDelete(avatar *btreemodels.BTreeNode) (err error) {
 		leftBrother = parent.Child[avatarPosition-1]
 		_ = Merge3Nodes(leftBrother, parent, avatar, avatarPosition-1) // 三个节点合并
 	}
+	// 这段写完就忘了啥意思（3个节点合并？？）
 	if parent.KeyNum == 0 && parent.Parent == nil {
 		btreeglobal.Root = avatar
 		return

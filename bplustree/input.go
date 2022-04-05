@@ -30,6 +30,19 @@ func Inputs() {
 			key = rand.Intn(bplustreeconst.MaxKey)
 			fmt.Println(key)
 		}
+		if key > 3000 {
+			//if key > 2046 {
+			//	fmt.Println("最大2046，否则溢出....")
+			//	continue
+			//}
+			endKey := key - 3000
+			for i := endKey; i > 0; i-- {
+				Insert(i*10, "")
+			}
+
+			ShowTree(bplustreeglobal.Root)
+			continue
+		}
 		if key > 2000 {
 			//if key > 2046 {
 			//	fmt.Println("最大2046，否则溢出....")
@@ -162,7 +175,7 @@ func InsertKeyInLeaf(n *bplustreemodels.BPTreeNode, key int, payload string, ins
 
 	// 如果插入的key是最大的，飘在最右，需要向上修正每级爸爸的最右key
 	if key == n.Key[len(n.Key)-1] {
-		if n.Parent != nil { // 到root了，修正结束
+		if n.Parent != nil { // 不到root了，修正持续
 			tempNode := n.Parent
 			for tempNode.Key[len(tempNode.Key)-1] < key {
 				tempNode.Key[len(tempNode.Key)-1] = key

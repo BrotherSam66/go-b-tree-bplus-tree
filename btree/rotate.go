@@ -27,8 +27,8 @@ func RightRotate(p *btreemodels.BTreeNode) (err error) {
 		fmt.Println(err.Error())
 		return
 	}
-	if p.KeyNum < 3 {
-		err = errors.New("出错，本节点KeyNum小于3，借不出去！")
+	if p.KeyNum < btreeconst.Min {
+		err = errors.New("出错，本节点KeyNum小于Min，借不出去！")
 		fmt.Println(err.Error())
 		return
 	}
@@ -85,8 +85,8 @@ func LeftRotate(p *btreemodels.BTreeNode) (err error) {
 		fmt.Println(err.Error())
 		return
 	}
-	if p.KeyNum < 3 {
-		err = errors.New("出错，本节点KeyNum小于3，借不出去！")
+	if p.KeyNum < btreeconst.Min {
+		err = errors.New("出错，本节点KeyNum小于Min，借不出去！")
 		fmt.Println(err.Error())
 		return
 	}

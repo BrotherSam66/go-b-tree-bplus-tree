@@ -46,7 +46,7 @@ func BPlusTreeDemo() {
 				fmt.Println()
 			}
 		case "D":
-			//Deletes()
+			Deletes()
 		case "E":
 			os.Exit(0)
 		default:
